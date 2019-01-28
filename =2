@@ -1,0 +1,2 @@
+Requirement already satisfied: Django in /Users/Pranay/anaconda/envs/marcopolo/lib/python3.7/site-packages (2.1.5)
+Requirement already satisfied: pytz in /Users/Pranay/anaconda/envs/marcopolo/lib/python3.7/site-packages (from Django) (2018.9)

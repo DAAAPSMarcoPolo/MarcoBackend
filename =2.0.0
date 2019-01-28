@@ -1,0 +1,2 @@
+Requirement already satisfied: Django in /Users/Pranay/anaconda/lib/python3.6/site-packages
+Requirement already satisfied: pytz in /Users/Pranay/anaconda/lib/python3.6/site-packages (from Django)
