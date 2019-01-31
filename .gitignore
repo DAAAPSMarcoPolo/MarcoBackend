@@ -87,3 +87,10 @@ local_settings.py
 
 .env
 db.sqlite3
+
+# PyCharm
+.idea/MarcoBackend.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
