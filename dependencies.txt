@@ -1,3 +1,5 @@
 Django
 djangorestframework
 django-cors-headers
+django-rest-knox
+psycopg2
