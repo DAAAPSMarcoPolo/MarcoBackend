@@ -1,3 +1,4 @@
+import sys
 import pickle
 import talib
 import pandas as pd
@@ -10,27 +11,34 @@ class Backtest:
 
     risk_free_return = .02
 
-    def __init__(self, strategy, initial_funds, universe, start_date, end_date):
-        self.strategy = strategy
+    def __init__(self, strategy_name, initial_funds, universe, start_date, end_date):
+        self.strategy = self.deserialize_strategy(strategy_name)
         self.initial_funds = float(initial_funds)
         self.current_funds = float(initial_funds)
         self.universe = universe
         self.start_date = start_date
         self.end_date = end_date
-        self.positions  = {}
-        self.orders = []
+        self.open_positions = {}
+        self.trades = []
         self.deserialized_strategy = None
         self.universe_data = {}
 
-    def deserialize_strategy(self):
-        strategy_file = open(self.strategy+'.pkl', 'rb')
-        strategy = pickle.load(strategy_file)
-        strategy_file.close()
-        self.deserialized_strategy = strategy
+    def deserialize_strategy(self, strategy_name):
+        try:
+            strategy_file = open(strategy_name+'.pkl', 'rb')
+            strategy = pickle.load(strategy_file)
+            strategy_file.close()
+            return strategy
+        except FileNotFoundError as e:
+            sys.exit(e)
+
 
     def set_historical_data(self):
         print('Fetching Data...')
-        self.universe_data = DataFetcher(self.universe, self.start_date, self.end_date).run()
+        universe_date = {}
+        universe_data = DataFetcher(self.universe, self.start_date, self.end_date).daily_data()
+        universe_data = self.strategy.add_tech_ind(universe_data)
+        self.universe_data = universe_data
 
     @property
     def pct_return(self):
@@ -73,14 +81,14 @@ class Backtest:
 
     def buy(self, symbol, entry_time, entry_price, pct_of_portfolio):
         # buy the stock if we do not have it in our portfolio
-        if symbol not in self.positions:
+        if symbol not in self.open_positions:
             qty = (self.current_funds*pct_of_portfolio) / entry_price
-            self.positions[symbol] = Position(entry_time, entry_price, qty)
+            self.open_positions[symbol] = Position(symbol, entry_time, entry_price, qty)
 
     def sell(self, symbol, exit_time, exit_price):
-        # Close our open position
-        self.positions[symbol].exit_time = exit_time
-        self.positions[symbol].exit_price = exit_price
+        # Close our open position and add it to our completed trades
+        self.trades.apend(Trade(self.open_positions[symbol], exit_time, exit_price))
+        del self.open_positions[symbol]
 
     # TODO: Write the simulation function
     def simulate(self):
@@ -89,30 +97,40 @@ class Backtest:
             pass
 
     def run(self):
-        #self.deserialize_strategy()
         self.set_historical_data()
         print(self.universe_data)
         #self.simulate()
 
 
 class Position:
-
-    def __int__(self, entry_time, entry_price, qty):
+    def __int__(self, symbol, entry_time, entry_price, qty):
+        self.symbol = symbol
         self.entry_time = entry_time
-        self.exit_time = None
         self.entry_price = float(entry_price)
-        self.exit_price = None
         self.qty = qty
 
     @property
     def cost_basis(self):
         return float(self.qty) * self.entry_price
 
+
+class Trade:
+    def __int__(self, position, exit_time, exit_price):
+        self.symbol = position.symbol
+        self.entry_time = position.entry_price
+        self.exit_time = exit_time
+        self.entry_price = position.entry_price
+        self.exit_price = exit_time
+        self.qty = position.qty
+
     @property
-    def is_open(self):
-        if self.exit_time is None:
-            return False
-        return True
+    def trade_length(self):
+        return self.exit_time - self.entry_price
+
+    @property
+    def pct_made(self):
+        return (self.exit_price - self.entry_price) / self.entry_price
+
 
 bt = Backtest('mean_reversion', 1, ['AAPL', 'SPY'], '2017-2-2', '2018-2-2')
 bt.run()
