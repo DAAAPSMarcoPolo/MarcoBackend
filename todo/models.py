@@ -8,9 +8,9 @@ def get_image_path(instance, filename):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    firstlogin = models.BooleanField(default=False)
+    firstlogin = models.BooleanField(default=True)
     code = models.CharField(max_length=6)
-    code_created = models.DateField(auto_now=False, auto_now_add=False)
+    code_created = models.DateTimeField(auto_now=False, auto_now_add=True)
     avatar = models.ImageField(upload_to=get_image_path, blank=True, null=True)
 
 class Todo(models.Model):
