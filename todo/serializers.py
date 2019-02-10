@@ -1,8 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from django.utils.crypto import get_random_string
 
-from .models import Todo
+from .models import Todo, UserProfile
 
 class TodoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,6 +20,9 @@ class CreateUserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(validated_data['username'],
                                         None,
                                         validated_data['password'])
+
+        code = get_random_string(length=6, allowed_chars='1234567890')
+        UserProfile.objects.create(user=user,code=code)
         return user
 
 class UserSerializer(serializers.ModelSerializer):
