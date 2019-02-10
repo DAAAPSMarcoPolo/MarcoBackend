@@ -25,7 +25,7 @@ SECRET_KEY = 'i4d4ojj4$occ@yl9t(t6-pnuc#&k59dpypy@_2-7&ie#6$tgz2'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['159.89.230.12','0.0.0.0','127.0.0.1', 'marcopoloinvestment.club']
+ALLOWED_HOSTS = ['159.89.230.12','0.0.0.0','127.0.0.1', 'marcopoloinvestment.club', 'localhost']
 
 
 # Application definition
