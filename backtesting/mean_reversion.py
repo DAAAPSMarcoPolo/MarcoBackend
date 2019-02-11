@@ -8,6 +8,7 @@ class MyStrategy(Strategy):
     def __init__(self):
         super().__init__()
 
+    # Visit for technical indicator documentation: http://mrjbq7.github.io/ta-lib/funcs.html
     def add_tech_ind(self, price_map):
         new_price_map = {}
 

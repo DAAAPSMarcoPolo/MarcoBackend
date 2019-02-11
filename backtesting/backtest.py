@@ -1,5 +1,7 @@
 import sys
 import pickle
+import logging
+from datetime import datetime, timedelta
 import talib
 import pandas as pd
 
@@ -22,6 +24,8 @@ class Backtest:
         self.trades = []
         self.deserialized_strategy = None
         self.universe_data = {}
+        self.logger = logging.getLogger(__name__)
+        #logging.basicConfig(level=logging.DEBUG)
 
     def deserialize_strategy(self, strategy_name):
         try:
@@ -34,50 +38,12 @@ class Backtest:
 
 
     def set_historical_data(self):
-        print('Fetching Data...')
+        self.logger.info('Fetching Data...')
         universe_date = {}
         universe_data = DataFetcher(self.universe, self.start_date, self.end_date).daily_data()
         universe_data = self.strategy.add_tech_ind(universe_data)
         self.universe_data = universe_data
-
-    @property
-    def pct_return(self):
-        change = (self.current_funds - self.initial_funds) / self.initial_funds
-        return change
-
-    @property
-    def market_return_rate(self):
-        sp500_return = (self.universe_data['SPY'].iloc[-1]["close"] - self.universe_data['SPY'].iloc[0]["close"]) / \
-                 (self.universe_data['SPY'].iloc[-1]["close"] - self.universe_data['SPY'].iloc[0]["close"])
-        return sp500_return
-
-    @property
-    def alpha(self):
-        # Alpha = Return – Risk-free rate of return – beta*(market return - Risk-free rate of return)
-        alpha = self.pct_return - self.risk_free_return() - self.beta() * (self.market_return_rate - self.risk_free_return())
-        return alpha
-
-    @property
-    def beta(self):
-        # Beta = (Market rate of return - risk free rate) / portfolio rate of return
-        beta = (self.market_return_rate() - self.risk_free_return()) / self.pct_return()
-        return beta
-
-    @property
-    def sharpe(self):
-        # Sharpe = (Portfolio Return - Risk Free Rate) / Standard deviation of excess returns
-        sharpe = (self.pct_return() - self.risk_free_return()) / 1
-        return sharpe
-
-    @property
-    def stats_summary(self):
-        stats = {
-            'pct_change': self.pct_return(),
-            'alpha': self.beta(),
-            'beta': self.alpha(),
-            'sharpe': self.sharpe()
-        }
-        return stats
+        self.logger.info('Complete...')
 
     def buy(self, symbol, entry_time, entry_price, pct_of_portfolio):
         # buy the stock if we do not have it in our portfolio
@@ -92,14 +58,21 @@ class Backtest:
 
     # TODO: Write the simulation function
     def simulate(self):
-        date = self.start_date
-        for key in self.universe_data.keys():
-            pass
+        self.logger.info('Running Backtest...')
+        curr_day = datetime.strptime(self.start_date, '%Y-%m-%d').date()
+        last_day = datetime.strptime(self.end_date, '%Y-%m-%d').date()
+        day = timedelta(days=1)
+        AAPL = self.universe_data["AAPL"]
+
+        while curr_day is not last_day:
+            for key in self.universe_data.keys():
+                symbol_data = self.universe_data[str(key)]
+            curr_day = curr_day + day
+
 
     def run(self):
         self.set_historical_data()
-        print(self.universe_data)
-        #self.simulate()
+        self.simulate()
 
 
 class Position:
@@ -130,6 +103,62 @@ class Trade:
     @property
     def pct_made(self):
         return (self.exit_price - self.entry_price) / self.entry_price
+
+
+class BTStats:
+    def __init__(self, open_positions, trades):
+        self.open_positions = open_positions
+        self.trades = trades
+
+    @property
+    def realized_profit(self):
+        # Total profit made from closed positions
+        pass
+
+    @property
+    def unrealized_profit(self):
+        # Get all profits/ loss in open postions
+        pass
+
+    @property
+    def pct_return(self):
+        change = (self.current_funds - self.initial_funds) / self.initial_funds
+        return change
+
+    @property
+    def market_return_rate(self):
+        sp500_return = (self.universe_data['SPY'].iloc[-1]["close"] - self.universe_data['SPY'].iloc[0]["close"]) / \
+                       (self.universe_data['SPY'].iloc[-1]["close"] - self.universe_data['SPY'].iloc[0]["close"])
+        return sp500_return
+
+    @property
+    def alpha(self):
+        # Alpha = Return – Risk-free rate of return – beta*(market return - Risk-free rate of return)
+        alpha = self.pct_return - self.risk_free_return() - self.beta() * (
+        self.market_return_rate - self.risk_free_return())
+        return alpha
+
+    @property
+    def beta(self):
+        # Beta = (Market rate of return - risk free rate) / portfolio rate of return
+        beta = (self.market_return_rate() - self.risk_free_return()) / self.pct_return()
+        return beta
+
+    @property
+    def sharpe(self):
+        # Sharpe = (Portfolio Return - Risk Free Rate) / Standard deviation of excess returns
+        sharpe = (self.pct_return() - self.risk_free_return()) / 1
+        return sharpe
+
+    @property
+    def stats_summary(self):
+        stats = {
+            'pct_change': self.pct_return(),
+            'alpha': self.beta(),
+            'beta': self.alpha(),
+            'sharpe': self.sharpe()
+        }
+        return stats
 
 
 bt = Backtest('mean_reversion', 1, ['AAPL', 'SPY'], '2017-2-2', '2018-2-2')

@@ -38,6 +38,10 @@ class DataFetcher():
                     results[symbol] = future.result()
                 except Exception as exc:
                     print('{} generated an exception: {}'.format(symbol, exc))
+
+            for symbol in results:
+                results[symbol].index = results[symbol].index.date
+
             return results
 
     ''' 
