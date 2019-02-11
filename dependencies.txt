@@ -4,3 +4,5 @@ django-cors-headers
 django-rest-knox
 psycopg2
 Pillow
+requests
+django-environ
