@@ -5,7 +5,7 @@ from knox.models import AuthToken
 from knox.auth import TokenAuthentication
 
 from .models import Todo
-from .serializers import TodoSerializer, CreateUserSerializer, UserSerializer, LoginUserSerializer
+from .serializers import TodoSerializer, CreateUserSerializer, UserSerializer, LoginUserSerializer, UserProfileSerializer
 
 from .utils.messages import Utils
 
@@ -55,7 +55,9 @@ class LoginAPI(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data
+        print(user)
         return Response({
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
+            #"user_profile": UserProfileSerializer(user, context=self.get_serializer_context()).data,
             "token": AuthToken.objects.create(user)
         })

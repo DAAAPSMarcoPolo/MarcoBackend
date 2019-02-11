@@ -25,10 +25,17 @@ class CreateUserSerializer(serializers.ModelSerializer):
         UserProfile.objects.create(user=user,code=code)
         return user
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ('firstlogin', 'avatar')
+
 class UserSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer(required=True)
+
     class Meta:
         model = User
-        fields = ('id', 'username')
+        fields = ('id', 'username', 'profile')
 
 class LoginUserSerializer(serializers.Serializer):
     username = serializers.CharField()
