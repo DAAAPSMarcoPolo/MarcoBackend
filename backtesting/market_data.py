@@ -39,8 +39,14 @@ class DataFetcher():
                 except Exception as exc:
                     print('{} generated an exception: {}'.format(symbol, exc))
 
+            keys_to_remove = []
             for symbol in results:
                 results[symbol].index = results[symbol].index.date
+                if results[symbol].empty:
+                    keys_to_remove.append(symbol)
+    
+            for key in keys_to_remove:
+                del results[key]
 
             return results
 

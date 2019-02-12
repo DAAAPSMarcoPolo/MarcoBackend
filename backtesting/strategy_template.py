@@ -5,9 +5,9 @@ from abc import ABC, abstractmethod
 class Strategy(ABC):
 
     @abstractmethod
-    def buy_condition(self):
+    def stocks_to_buy(self):
         raise NotImplementedError
 
     @abstractmethod
-    def sell_condition(self):
+    def stocks_to_sell(self):
         raise NotImplementedError

@@ -6,6 +6,8 @@ import talib
 import pandas as pd
 
 from market_data import DataFetcher
+from sp500 import Universe
+
 # from strategy_template import Strategy
 # from mean_reversion import MyStrategy
 
@@ -25,7 +27,7 @@ class Backtest:
         self.deserialized_strategy = None
         self.universe_data = {}
         self.logger = logging.getLogger(__name__)
-        #logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.INFO)
 
     def deserialize_strategy(self, strategy_name):
         try:
@@ -45,30 +47,72 @@ class Backtest:
         self.universe_data = universe_data
         self.logger.info('Complete...')
 
-    def buy(self, symbol, entry_time, entry_price, pct_of_portfolio):
+    def buy(self, symbol, entry_price, entry_time, portfolio_size):
         # buy the stock if we do not have it in our portfolio
         if symbol not in self.open_positions:
-            qty = (self.current_funds*pct_of_portfolio) / entry_price
+            qty = (self.current_funds*portfolio_size) / entry_price
             self.open_positions[symbol] = Position(symbol, entry_time, entry_price, qty)
 
-    def sell(self, symbol, exit_time, exit_price):
+    def sell(self, symbol, exit_price, exit_time):
         # Close our open position and add it to our completed trades
         self.trades.apend(Trade(self.open_positions[symbol], exit_time, exit_price))
         del self.open_positions[symbol]
 
-    # TODO: Write the simulation function
+    def daily_data_dict(self):
+        day = timedelta(days=1)
+        curr_date = datetime.strptime(self.start_date, '%Y-%m-%d').date()
+        last_date = datetime.strptime(self.end_date, '%Y-%m-%d').date() + day
+
+        data_by_date = {}
+        while curr_date < last_date:
+            data_by_date[curr_date] = pd.DataFrame()
+            for symbol in self.universe_data.keys():
+                symbol_df = self.universe_data[str(symbol)]
+                # Make sure there is data for this day
+                if curr_date in symbol_df.index:
+                    symbol_data = symbol_df.loc[curr_date]
+                    symbol_data.reindex([symbol])
+                    symbol_data_dict = symbol_data.to_dict()
+                    symbol_data_dict['symbol'] = symbol
+                    data_by_date[curr_date] = data_by_date[curr_date].append(symbol_data_dict, ignore_index=True)
+
+            if len(data_by_date[curr_date].index) > 0:
+                data_by_date[curr_date] = data_by_date[curr_date].set_index('symbol')
+            else:
+                del data_by_date[curr_date]
+
+            curr_date = curr_date + day
+
+        return data_by_date
+
+    def manage_portfolio(self, daily_data, curr_date):
+        curr_porfolio = []
+
+        for postion in self.open_positions:
+            curr_porfolio.append(postion.symbol)
+
+        stock_to_sell_tuples = self.strategy.stocks_to_sell(curr_porfolio, daily_data)
+        for tup in stock_to_sell_tuples:
+            self.sell(tup[0], tup[1], curr_date)
+
+        stock_to_buy_tuples = self.strategy.stocks_to_buy(curr_porfolio, daily_data)
+        for tup in stock_to_buy_tuples:
+            self.buy(tup[0], tup[1], curr_date, self.strategy.portfolio_size)
+
     def simulate(self):
         self.logger.info('Running Backtest...')
-        curr_day = datetime.strptime(self.start_date, '%Y-%m-%d').date()
-        last_day = datetime.strptime(self.end_date, '%Y-%m-%d').date()
+        daily_dict = self.daily_data_dict()
+
         day = timedelta(days=1)
-        AAPL = self.universe_data["AAPL"]
+        curr_date = datetime.strptime(self.start_date, '%Y-%m-%d').date()
+        last_date = datetime.strptime(self.end_date, '%Y-%m-%d').date() + day
 
-        while curr_day is not last_day:
-            for key in self.universe_data.keys():
-                symbol_data = self.universe_data[str(key)]
-            curr_day = curr_day + day
+        while curr_date < last_date:
+            daily_data = daily_dict[curr_date]
+            self.manage_portfolio(daily_data, curr_date)
+            curr_date = curr_date + day
 
+        self.logger.info('Finished Backtest...')
 
     def run(self):
         self.set_historical_data()
@@ -161,5 +205,5 @@ class BTStats:
         return stats
 
 
-bt = Backtest('mean_reversion', 1, ['AAPL', 'SPY'], '2017-2-2', '2018-2-2')
+bt = Backtest('mean_reversion', 1, Universe, '2017-2-2', '2018-2-2')
 bt.run()
