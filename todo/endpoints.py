@@ -1,7 +1,7 @@
 from django.conf.urls import include, url
 from rest_framework import routers
 
-from .api import TodoViewSet, AdminRegistrationAPI, AddUserAPI, LoginAPI, FirstLoginAPI
+from .api import TodoViewSet, AdminRegistrationAPI, AddUserAPI, LoginAPI, FirstLoginAPI, LoginFactorAPI
 
 router = routers.DefaultRouter()
 router.register('todos', TodoViewSet, 'todos')
@@ -14,5 +14,6 @@ urlpatterns = [
   url("^auth/register/admin/$", AdminRegistrationAPI.as_view()),
 
   url("^auth/login/$", LoginAPI.as_view()),
+  url("^auth/loginfactor/$", LoginFactorAPI.as_view()),
   url("^auth/firstlogin/$", FirstLoginAPI.as_view())
 ]
