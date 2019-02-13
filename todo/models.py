@@ -1,6 +1,6 @@
 from django.db import models
-import fieldkeys
 from django.contrib.auth.models import User
+from fernet_fields import EncryptedCharField
 import os 
 # Create your models here.
 
@@ -17,6 +17,8 @@ class UserProfile(models.Model):
 
 class AlpacaAPIKeys(models.Model): 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    key_id = models.AutoField(primary_key=True)
+    secret_key = EncryptedCharField(max_length=NONE)
 
 class Todo(models.Model):
     title = models.CharField(max_length=120)

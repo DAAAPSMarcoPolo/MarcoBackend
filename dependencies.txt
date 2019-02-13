@@ -4,6 +4,7 @@ django-cors-headers
 django-rest-knox
 psycopg2
 Pillow
-django-encrypted-fields
 requests
 django-environ
+django-fernet-fields
+
