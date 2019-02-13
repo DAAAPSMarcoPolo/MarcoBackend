@@ -6,3 +6,4 @@ psycopg2
 Pillow
 requests
 django-environ
+twilio
