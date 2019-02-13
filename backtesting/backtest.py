@@ -11,7 +11,7 @@ from market_data import DataFetcher
 from sp500 import Universe
 
 # from strategy_template import Strategy
-from mean_reversion import MyStrategy
+from mean_reversion import MeanReversion
 
 class Backtest:
 
@@ -105,7 +105,6 @@ class Backtest:
         for tup in stock_to_sell_tuples:
             self.sell(tup[0], tup[1], curr_date)
 
-        print (round(self.current_funds, 2))
         allocated_funds = self.current_funds / self.strategy.portfolio_size
 
         stock_to_buy_tuples = self.strategy.stocks_to_buy(curr_portfolio, daily_data)
@@ -227,7 +226,7 @@ class PrintColors:
     UNDERLINE = '\033[4m'
 
 
-bt = Backtest('mean_reversion', 30000, Universe, '2017-1-1', '2019-1-1')
+bt = Backtest('mean_reversion', 30000, Universe, '2017-1-1', '2017-2-12')
 bt.run()
 btStats = BTStats(bt)
 time.sleep(.1)
