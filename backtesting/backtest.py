@@ -1,3 +1,4 @@
+from __future__ import division
 import math
 import sys
 import pickle
@@ -51,8 +52,13 @@ class Backtest:
     def buy(self, symbol, entry_price, entry_time, allocated_funds):
         # buy the stock if we do not have it in our portfolio
         if symbol not in self.open_positions:
-            qty = math.floor(allocated_funds / entry_price)
-            self.open_positions[symbol] = Position(symbol, entry_time, entry_price, qty)
+            if allocated_funds == 0 or entry_price == 0:
+                qty = 0
+            else:
+                qty = math.floor(allocated_funds / entry_price)
+
+            if (qty > 0):
+                self.open_positions[symbol] = Position(symbol, entry_time, entry_price, qty)
 
     def sell(self, symbol, exit_price, exit_time):
         # Close our open position and add it to our completed trades
@@ -99,6 +105,7 @@ class Backtest:
         for tup in stock_to_sell_tuples:
             self.sell(tup[0], tup[1], curr_date)
 
+        print (round(self.current_funds, 2))
         allocated_funds = self.current_funds / self.strategy.portfolio_size
 
         stock_to_buy_tuples = self.strategy.stocks_to_buy(curr_portfolio, daily_data)
@@ -113,7 +120,7 @@ class Backtest:
         curr_date = datetime.strptime(self.start_date, '%Y-%m-%d').date()
         last_date = datetime.strptime(self.end_date, '%Y-%m-%d').date() + day
 
-        while curr_date < last_date:
+        while curr_date <= last_date:
             if curr_date in daily_dict:
                 daily_data = daily_dict[curr_date]
                 self.manage_portfolio(daily_data, curr_date)
@@ -224,8 +231,9 @@ bt = Backtest('mean_reversion', 30000, Universe, '2017-1-1', '2019-1-1')
 bt.run()
 btStats = BTStats(bt)
 time.sleep(.1)
-print(PrintColors.OKGREEN+"Initial Funds:{}".format(round(bt.initial_funds, 2))+PrintColors.ENDC)
-print(PrintColors.OKGREEN+"End Funds{}".format(round(bt.current_funds, 2))+PrintColors.ENDC)
-print(PrintColors.OKGREEN+"Profit:{}".format(btStats.realized_profit)+PrintColors.ENDC)
-print(PrintColors.OKGREEN+"% Return:{}%".format(btStats.pct_return)+PrintColors.ENDC)
-
+print(PrintColors.OKGREEN)
+print("Initial Funds: ${}".format(round(bt.initial_funds, 2)))
+print("End Funds: ${}".format(round(bt.current_funds, 2)))
+print("Profit: ${}".format(btStats.realized_profit))
+print("% Return: {}%".format(btStats.pct_return))
+print(PrintColors.ENDC)
