@@ -7,4 +7,4 @@ Pillow
 requests
 django-environ
 django-fernet-fields
-
+twilio
