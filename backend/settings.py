@@ -85,8 +85,8 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'MarcoPolo',
-        'USER': 'Sean',
+        'NAME': 'postgres',
+        'USER': 'postgres',
         'PASSWORD': '',
         'HOST': '127.0.0.1',
         'PORT': '5432',
@@ -135,3 +135,6 @@ STATIC_URL = '/static/'
 CORS_ORIGIN_WHITELIST = (
     'localhost:3000/'
 )
+
+#encryption keys folder 
+ENCRYPTED_FIELDS_KEYDIR = os.path.join(BASE_DIR, 'fieldkeys')

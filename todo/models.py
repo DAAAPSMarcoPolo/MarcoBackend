@@ -1,4 +1,5 @@
 from django.db import models
+import fieldkeys
 from django.contrib.auth.models import User
 import os 
 # Create your models here.
@@ -12,6 +13,9 @@ class UserProfile(models.Model):
     code = models.CharField(max_length=6)
     code_created = models.DateTimeField(auto_now=False, auto_now_add=True)
     avatar = models.ImageField(upload_to=get_image_path, blank=True, null=True)
+
+class AlpacaAPIKeys(models.Model): 
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
 
 class Todo(models.Model):
     title = models.CharField(max_length=120)
