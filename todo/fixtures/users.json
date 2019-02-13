@@ -16,5 +16,15 @@
         "groups": [],
         "user_permissions": []
     }
+},
+{
+  "model": "todo.UserProfile",
+  "fields": {
+      "user_id": 1,
+      "firstlogin": true,
+      "code": "000000",
+      "code_created": "2019-02-04T18:15:41.072Z",
+      "avatar": null
+  }
 }
 ]

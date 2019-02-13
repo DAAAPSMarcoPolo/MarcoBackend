@@ -25,10 +25,17 @@ class CreateUserSerializer(serializers.ModelSerializer):
         UserProfile.objects.create(user=user,code=code)
         return user
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class ExtUserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ('firstlogin', 'avatar')
+        fields = '__all__'
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    new_password = serializers.CharField(required=False)
+
+    class Meta:
+        model = UserProfile
+        exclude = ('code', 'code_created')
 
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(required=True)
@@ -36,6 +43,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'profile')
+
 
 class LoginUserSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -46,3 +54,17 @@ class LoginUserSerializer(serializers.Serializer):
         if user and user.is_active:
             return user
         raise serializers.ValidationError("Unable to log in with provided credentials.")
+
+class FirstLoginSerializer(serializers.Serializer):
+    # todo add fields that should be updated on first login
+    username = serializers.IntegerField()
+    password = serializers.CharField(allow_blank=False)
+    new_password = serializers.CharField(allow_blank=False)
+    phone_number = serializers.CharField(allow_blank=False)
+
+    def validate(self, data):
+        user = authenticate(**data)
+        if user and user.is_active:
+            return user
+        raise serializers.ValidationError("Unable to log in with provided credentials.")
+
