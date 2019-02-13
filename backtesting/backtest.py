@@ -1,15 +1,16 @@
+import math
 import sys
 import pickle
 import logging
+import time
 from datetime import datetime, timedelta
-import talib
 import pandas as pd
 
 from market_data import DataFetcher
 from sp500 import Universe
 
 # from strategy_template import Strategy
-# from mean_reversion import MyStrategy
+from mean_reversion import MyStrategy
 
 class Backtest:
 
@@ -45,17 +46,20 @@ class Backtest:
         universe_data = DataFetcher(self.universe, self.start_date, self.end_date).daily_data()
         universe_data = self.strategy.add_tech_ind(universe_data)
         self.universe_data = universe_data
-        self.logger.info('Complete...')
+        self.logger.info('Complete.')
 
-    def buy(self, symbol, entry_price, entry_time, portfolio_size):
+    def buy(self, symbol, entry_price, entry_time, allocated_funds):
         # buy the stock if we do not have it in our portfolio
         if symbol not in self.open_positions:
-            qty = (self.current_funds*portfolio_size) / entry_price
+            qty = math.floor(allocated_funds / entry_price)
             self.open_positions[symbol] = Position(symbol, entry_time, entry_price, qty)
 
     def sell(self, symbol, exit_price, exit_time):
         # Close our open position and add it to our completed trades
-        self.trades.apend(Trade(self.open_positions[symbol], exit_time, exit_price))
+        self.trades.append(Trade(self.open_positions[symbol], exit_time, exit_price))
+
+        p_l = self.open_positions[symbol].qty * (exit_price - self.open_positions[symbol].entry_price)
+        self.current_funds = self.current_funds + p_l
         del self.open_positions[symbol]
 
     def daily_data_dict(self):
@@ -86,18 +90,20 @@ class Backtest:
         return data_by_date
 
     def manage_portfolio(self, daily_data, curr_date):
-        curr_porfolio = []
+        curr_portfolio = []
 
-        for postion in self.open_positions:
-            curr_porfolio.append(postion.symbol)
+        for position in self.open_positions:
+            curr_portfolio.append(self.open_positions[position].symbol)
 
-        stock_to_sell_tuples = self.strategy.stocks_to_sell(curr_porfolio, daily_data)
+        stock_to_sell_tuples = self.strategy.stocks_to_sell(curr_portfolio, daily_data)
         for tup in stock_to_sell_tuples:
             self.sell(tup[0], tup[1], curr_date)
 
-        stock_to_buy_tuples = self.strategy.stocks_to_buy(curr_porfolio, daily_data)
+        allocated_funds = self.current_funds / self.strategy.portfolio_size
+
+        stock_to_buy_tuples = self.strategy.stocks_to_buy(curr_portfolio, daily_data)
         for tup in stock_to_buy_tuples:
-            self.buy(tup[0], tup[1], curr_date, self.strategy.portfolio_size)
+            self.buy(tup[0], tup[1], curr_date, allocated_funds)
 
     def simulate(self):
         self.logger.info('Running Backtest...')
@@ -108,11 +114,12 @@ class Backtest:
         last_date = datetime.strptime(self.end_date, '%Y-%m-%d').date() + day
 
         while curr_date < last_date:
-            daily_data = daily_dict[curr_date]
-            self.manage_portfolio(daily_data, curr_date)
+            if curr_date in daily_dict:
+                daily_data = daily_dict[curr_date]
+                self.manage_portfolio(daily_data, curr_date)
             curr_date = curr_date + day
 
-        self.logger.info('Finished Backtest...')
+        self.logger.info('Finished Backtest.')
 
     def run(self):
         self.set_historical_data()
@@ -120,7 +127,7 @@ class Backtest:
 
 
 class Position:
-    def __int__(self, symbol, entry_time, entry_price, qty):
+    def __init__(self, symbol, entry_time, entry_price, qty):
         self.symbol = symbol
         self.entry_time = entry_time
         self.entry_price = float(entry_price)
@@ -132,7 +139,7 @@ class Position:
 
 
 class Trade:
-    def __int__(self, position, exit_time, exit_price):
+    def __init__(self, position, exit_time, exit_price):
         self.symbol = position.symbol
         self.entry_time = position.entry_price
         self.exit_time = exit_time
@@ -150,23 +157,20 @@ class Trade:
 
 
 class BTStats:
-    def __init__(self, open_positions, trades):
-        self.open_positions = open_positions
-        self.trades = trades
+    def __init__(self, bt):
+        self.bt = bt
 
     @property
     def realized_profit(self):
         # Total profit made from closed positions
-        pass
-
-    @property
-    def unrealized_profit(self):
-        # Get all profits/ loss in open postions
-        pass
+        profit = self.bt.current_funds - self.bt.initial_funds
+        profit = round(profit, 2)
+        return profit
 
     @property
     def pct_return(self):
-        change = (self.current_funds - self.initial_funds) / self.initial_funds
+        change = (self.bt.current_funds - self.bt.initial_funds) / self.bt.initial_funds
+        change = round(change*100, 2)
         return change
 
     @property
@@ -205,5 +209,23 @@ class BTStats:
         return stats
 
 
-bt = Backtest('mean_reversion', 1, Universe, '2017-2-2', '2018-2-2')
+class PrintColors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+bt = Backtest('mean_reversion', 30000, Universe, '2017-1-1', '2019-1-1')
 bt.run()
+btStats = BTStats(bt)
+time.sleep(.1)
+print(PrintColors.OKGREEN+"Initial Funds:{}".format(round(bt.initial_funds, 2))+PrintColors.ENDC)
+print(PrintColors.OKGREEN+"End Funds{}".format(round(bt.current_funds, 2))+PrintColors.ENDC)
+print(PrintColors.OKGREEN+"Profit:{}".format(btStats.realized_profit)+PrintColors.ENDC)
+print(PrintColors.OKGREEN+"% Return:{}%".format(btStats.pct_return)+PrintColors.ENDC)
+

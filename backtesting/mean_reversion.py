@@ -4,10 +4,10 @@ import talib as ta
 
 
 class MyStrategy(Strategy):
+    portfolio_size = 5
 
     def __init__(self):
         super().__init__()
-        self.portfolio_size = 5
 
     # Visit for technical indicator documentation: http://mrjbq7.github.io/ta-lib/funcs.html
     def add_tech_ind(self, price_map):
@@ -36,7 +36,7 @@ class MyStrategy(Strategy):
         for symbol in symbols:
             ''' The buy price is the open price because this algo checks to buy in the morning '''
             if symbol not in portfolio:
-                order_tup = (symbol, sorted_daily_data.loc[symbol, open])
+                order_tup = (symbol, sorted_daily_data.loc[symbol, 'open'])
                 buy_orders.append(order_tup)
 
         return buy_orders
@@ -49,8 +49,10 @@ class MyStrategy(Strategy):
         sell_orders = []
         for symbol in portfolio:
             if symbol not in buy_symbols:
-                order_tup = (symbol, sorted_daily_data.loc[symbol, open])
+                order_tup = (symbol, sorted_daily_data.loc[symbol, 'open'])
                 sell_orders.append(order_tup)
+
+        return sell_orders
 
 
 if __name__ == '__main__':
