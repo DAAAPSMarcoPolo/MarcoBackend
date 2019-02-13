@@ -1,5 +1,8 @@
 # Created by https://www.gitignore.io
 
+# global vars
+globals.json
+
 ### OSX ###
 .DS_Store
 .AppleDouble
