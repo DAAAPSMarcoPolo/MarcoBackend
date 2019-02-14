@@ -1,17 +1,17 @@
 from __future__ import division
 import math
-import sys
-import pickle
+import statistics
 import logging
 import time
 from datetime import datetime, timedelta
 import pandas as pd
+import importlib
+from inspect import isclass
 
 from market_data import DataFetcher
-from sp500 import Universe
+from defaultUniverses.sp500 import Universe
 
-# from strategy_template import Strategy
-from mean_reversion import MeanReversion
+# from strategies.strategy_template import Strategy
 
 class Backtest:
 
@@ -21,6 +21,7 @@ class Backtest:
         self.strategy = strategy_name
         self.initial_funds = float(initial_funds)
         self.current_funds = float(initial_funds)
+        self.daily_returns = []
         self.universe = universe
         self.start_date = start_date
         self.end_date = end_date
@@ -30,14 +31,20 @@ class Backtest:
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO)
 
-    def deserialize_strategy(self):
+    def import_strategy(self):
         try:
-            strategy_file = open(self.strategy+'.pkl', 'rb')
-            strategy = pickle.load(strategy_file)
-            strategy_file.close()
-            self.strategy = strategy
-        except FileNotFoundError as e:
-            sys.exit(e)
+            strategy = importlib.import_module('strategies.' + self.strategy)
+            classes = [x for x in dir(strategy) if isclass(getattr(strategy, x))]
+            self.strategy = getattr(strategy, classes[0])()
+        except ImportError as e:
+            self.logger.error(e)
+        # try:
+        #     strategy_file = open(self.strategy+'.pkl', 'rb')
+        #     strategy = pickle.load(strategy_file)
+        #     strategy_file.close()
+        #     self.strategy = strategy
+        # except FileNotFoundError as e:
+        #     sys.exit(e)
 
     def set_historical_data(self):
         self.logger.info('Fetching Data...')
@@ -99,8 +106,12 @@ class Backtest:
             curr_portfolio.append(self.open_positions[position].symbol)
 
         stock_to_sell_tuples = self.strategy.stocks_to_sell(curr_portfolio, daily_data)
+
         for tup in stock_to_sell_tuples:
             self.sell(tup[0], tup[1], curr_date)
+
+        daily_pct_made = (self.current_funds - self.initial_funds) / self.initial_funds
+        self.daily_returns.append(daily_pct_made)
 
         allocated_funds = self.current_funds / self.strategy.portfolio_size
 
@@ -125,7 +136,7 @@ class Backtest:
         self.logger.info('Finished Backtest.')
 
     def run(self):
-        self.deserialize_strategy()
+        self.import_strategy()
         self.set_historical_data()
         self.universe_data = self.strategy.add_tech_ind(self.universe_data)
         self.simulate()
@@ -164,6 +175,7 @@ class Trade:
 class BTStats:
     def __init__(self, bt):
         self.bt = bt
+        self.spy = DataFetcher(['SPY'], bt.start_date, bt.end_date).daily_data()['SPY']
 
     @property
     def realized_profit(self):
@@ -175,44 +187,38 @@ class BTStats:
     @property
     def pct_return(self):
         change = (self.bt.current_funds - self.bt.initial_funds) / self.bt.initial_funds
-        change = round(change*100, 2)
+        change = round(change, 2)
         return change
 
     @property
     def market_return_rate(self):
-        sp500_return = (self.universe_data['SPY'].iloc[-1]["close"] - self.universe_data['SPY'].iloc[0]["close"]) / \
-                       (self.universe_data['SPY'].iloc[-1]["close"] - self.universe_data['SPY'].iloc[0]["close"])
+        day = timedelta(days=1)
+        first_trading_day = datetime.strptime(self.bt.start_date, '%Y-%m-%d').date()
+        found = False
+        while not found:
+            try:
+                self.spy.loc[first_trading_day]
+                found = True
+            except:
+                first_trading_day = first_trading_day + day
+
+        sp500_return = (self.spy.iloc[-1].close - self.spy.loc[first_trading_day, 'close']) / self.spy.loc[first_trading_day, 'close']
         return sp500_return
 
     @property
-    def alpha(self):
-        # Alpha = Return – Risk-free rate of return – beta*(market return - Risk-free rate of return)
-        alpha = self.pct_return - self.risk_free_return() - self.beta() * (
-        self.market_return_rate - self.risk_free_return())
-        return alpha
-
-    @property
-    def beta(self):
-        # Beta = (Market rate of return - risk free rate) / portfolio rate of return
-        beta = (self.market_return_rate() - self.risk_free_return()) / self.pct_return()
-        return beta
-
-    @property
     def sharpe(self):
-        # Sharpe = (Portfolio Return - Risk Free Rate) / Standard deviation of excess returns
-        sharpe = (self.pct_return() - self.risk_free_return()) / 1
+        '''
+        Usually, any Sharpe ratio greater than 1 is considered acceptable to good by investors.
+        A ratio higher than 2 is rated as very good, and a ratio of 3 or higher is considered excellent.
+        The basic purpose of the Sharpe ratio is to allow an investor to analyze how much greater a return
+        he or she is obtaining in relation to the level of additional risk taken to generate that return.
+
+        sharpe_ratio = (Portfolio Return - Risk Free Rate) / Standard deviation of excess returns
+        '''
+        diff_return = (self.pct_return - self.market_return_rate)
+        s_d = statistics.stdev(self.bt.daily_returns)
+        sharpe = diff_return / s_d
         return sharpe
-
-    @property
-    def stats_summary(self):
-        stats = {
-            'pct_change': self.pct_return(),
-            'alpha': self.beta(),
-            'beta': self.alpha(),
-            'sharpe': self.sharpe()
-        }
-        return stats
-
 
 class PrintColors:
     HEADER = '\033[95m'
@@ -225,13 +231,15 @@ class PrintColors:
     UNDERLINE = '\033[4m'
 
 
-#bt = Backtest('mean_reversion', 30000, Universe, '2017-1-1', '2017-2-12')
-#bt.run()
-#btStats = BTStats(bt)
-#time.sleep(.1)
-# print(PrintColors.OKGREEN)
-# print("Initial Funds: ${}".format(round(bt.initial_funds, 2)))
-# print("End Funds: ${}".format(round(bt.current_funds, 2)))
-# print("Profit: ${}".format(btStats.realized_profit))
-# print("% Return: {}%".format(btStats.pct_return))
-# print(PrintColors.ENDC)
+# Test run
+bt = Backtest('mean_reversion', 1000, Universe, '2019-1-1', '2019-2-13')
+bt.run()
+btStats = BTStats(bt)
+time.sleep(.1)
+print(PrintColors.OKGREEN)
+print("Initial Funds: ${}".format(round(bt.initial_funds, 2)))
+print("End Funds: ${}".format(round(bt.current_funds, 2)))
+print("Profit: ${}".format(btStats.realized_profit))
+print("% Return: {}%".format(btStats.pct_return*100))
+print("Sharpe Ratio: {}".format(btStats.sharpe))
+print(PrintColors.ENDC)

@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 
 
-class DataFetcher():
+class DataFetcher:
     NY = 'America/New_York'
     api = tradeapi.REST(
         key_id='PK3MIMJUUKM3UT7QCLNA',

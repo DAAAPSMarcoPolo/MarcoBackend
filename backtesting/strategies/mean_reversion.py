@@ -1,5 +1,4 @@
-from strategy_template import Strategy
-import pickle
+from .strategy_template import Strategy
 import talib as ta
 
 
@@ -56,10 +55,3 @@ class MeanReversion(Strategy):
                 sell_orders.append(order_tup)
 
         return sell_orders
-
-
-if __name__ == '__main__':
-    test = MeanReversion()
-    output = open('mean_reversion.pkl', 'wb')
-    pickle.dump(test, output)
-    output.close()
