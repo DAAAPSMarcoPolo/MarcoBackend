@@ -18,7 +18,7 @@ class Backtest:
     risk_free_return = .02
 
     def __init__(self, strategy_name, initial_funds, universe, start_date, end_date):
-        self.strategy = self.deserialize_strategy(strategy_name)
+        self.strategy = strategy_name
         self.initial_funds = float(initial_funds)
         self.current_funds = float(initial_funds)
         self.universe = universe
@@ -26,26 +26,23 @@ class Backtest:
         self.end_date = end_date
         self.open_positions = {}
         self.trades = []
-        self.deserialized_strategy = None
         self.universe_data = {}
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO)
 
-    def deserialize_strategy(self, strategy_name):
+    def deserialize_strategy(self):
         try:
-            strategy_file = open(strategy_name+'.pkl', 'rb')
+            strategy_file = open(self.strategy+'.pkl', 'rb')
             strategy = pickle.load(strategy_file)
             strategy_file.close()
-            return strategy
+            self.strategy = strategy
         except FileNotFoundError as e:
             sys.exit(e)
-
 
     def set_historical_data(self):
         self.logger.info('Fetching Data...')
         universe_date = {}
         universe_data = DataFetcher(self.universe, self.start_date, self.end_date).daily_data()
-        universe_data = self.strategy.add_tech_ind(universe_data)
         self.universe_data = universe_data
         self.logger.info('Complete.')
 
@@ -57,7 +54,7 @@ class Backtest:
             else:
                 qty = math.floor(allocated_funds / entry_price)
 
-            if (qty > 0):
+            if qty > 0:
                 self.open_positions[symbol] = Position(symbol, entry_time, entry_price, qty)
 
     def sell(self, symbol, exit_price, exit_time):
@@ -128,7 +125,9 @@ class Backtest:
         self.logger.info('Finished Backtest.')
 
     def run(self):
+        self.deserialize_strategy()
         self.set_historical_data()
+        self.universe_data = self.strategy.add_tech_ind(self.universe_data)
         self.simulate()
 
 
@@ -226,13 +225,13 @@ class PrintColors:
     UNDERLINE = '\033[4m'
 
 
-bt = Backtest('mean_reversion', 30000, Universe, '2017-1-1', '2017-2-12')
-bt.run()
-btStats = BTStats(bt)
-time.sleep(.1)
-print(PrintColors.OKGREEN)
-print("Initial Funds: ${}".format(round(bt.initial_funds, 2)))
-print("End Funds: ${}".format(round(bt.current_funds, 2)))
-print("Profit: ${}".format(btStats.realized_profit))
-print("% Return: {}%".format(btStats.pct_return))
-print(PrintColors.ENDC)
+#bt = Backtest('mean_reversion', 30000, Universe, '2017-1-1', '2017-2-12')
+#bt.run()
+#btStats = BTStats(bt)
+#time.sleep(.1)
+# print(PrintColors.OKGREEN)
+# print("Initial Funds: ${}".format(round(bt.initial_funds, 2)))
+# print("End Funds: ${}".format(round(bt.current_funds, 2)))
+# print("Profit: ${}".format(btStats.realized_profit))
+# print("% Return: {}%".format(btStats.pct_return))
+# print(PrintColors.ENDC)
