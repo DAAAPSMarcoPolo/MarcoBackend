@@ -212,7 +212,6 @@ class BTStats:
         A ratio higher than 2 is rated as very good, and a ratio of 3 or higher is considered excellent.
         The basic purpose of the Sharpe ratio is to allow an investor to analyze how much greater a return
         he or she is obtaining in relation to the level of additional risk taken to generate that return.
-
         sharpe_ratio = (Portfolio Return - Risk Free Rate) / Standard deviation of excess returns
         '''
         diff_return = (self.pct_return - self.market_return_rate)
