@@ -114,14 +114,8 @@ class LoginFactorAPI(generics.GenericAPIView):
     user_prof = UserProfile.objects.get(user=user)
 
     code = request.data['code']
-    username = request.data['username']
-    password = request.data['password']
-    print(code)
-    print(username)
-    print(password)
 
     user = login_serializer.validated_data
-    print(user_prof.code)
     if code == user_prof.code:
       print("here")
       return Response({
