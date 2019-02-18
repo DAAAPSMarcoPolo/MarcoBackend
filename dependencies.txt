@@ -12,6 +12,3 @@ twilio
 alpaca-trade-api
 numpy
 pandas
-pickle
-talib
-
