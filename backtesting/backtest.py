@@ -216,7 +216,7 @@ class BTStats:
         '''
         diff_return = (self.pct_return - self.market_return_rate)
         s_d = statistics.stdev(self.bt.daily_returns)
-        sharpe = diff_return / s_d
+        sharpe = round(diff_return / s_d, 2)
         return sharpe
 
 class PrintColors:

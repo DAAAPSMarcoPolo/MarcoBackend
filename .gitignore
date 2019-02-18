@@ -89,6 +89,7 @@ local_settings.py
 db.sqlite3
 
 # PyCharm
+.idea/
 .idea/MarcoBackend.iml
 .idea/misc.xml
 .idea/modules.xml
