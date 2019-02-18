@@ -1,7 +1,6 @@
 Django
 djangorestframework
 django-cors-headers
-extendingusermodels
 django-rest-knox
 psycopg2
 Pillow
