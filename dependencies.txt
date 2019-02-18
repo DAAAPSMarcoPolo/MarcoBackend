@@ -1,8 +1,17 @@
 Django
 djangorestframework
 django-cors-headers
+extendingusermodels
+django-rest-knox
+psycopg2
+Pillow
+requests
+django-environ
+django-fernet-fields
+twilio
 alpaca-trade-api
 numpy
 pandas
 pickle
 talib
+
