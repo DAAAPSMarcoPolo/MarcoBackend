@@ -7,3 +7,4 @@ Pillow
 requests
 django-environ
 twilio
+environ

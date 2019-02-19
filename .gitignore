@@ -1,8 +1,5 @@
 # Created by https://www.gitignore.io
 
-# global vars
-globals.json
-
 ### OSX ###
 .DS_Store
 .AppleDouble
@@ -92,3 +89,5 @@ local_settings.py
 db.sqlite3
 
 .idea
+
+users.json
