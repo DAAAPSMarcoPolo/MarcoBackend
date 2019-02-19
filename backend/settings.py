@@ -37,6 +37,8 @@ ALLOWED_HOSTS = ['159.89.230.12','0.0.0.0','127.0.0.1', 'marcopoloinvestment.clu
 
 # .env variables
 EMAIL_DOMAIN = env('EMAIL_DOMAIN')
+EMAIL_KEY = env('EMAIL_KEY')
+EMAIL_FROM = env('EMAIL_FROM')
 TWILIO_ACC_SID = env('TWILIO_ACC_SID')
 TWILIO_AUTH_TOKEN = env('TWILIO_AUTH_TOKEN')
 
