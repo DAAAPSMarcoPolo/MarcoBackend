@@ -184,3 +184,4 @@ db.sqlite3
 
 .idea/
 
+*.code-workspace
