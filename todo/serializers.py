@@ -2,8 +2,15 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.utils.crypto import get_random_string
+from fernet_fields import EncryptedTextField
 
-from .models import Todo, UserProfile
+
+from .models import Todo, UserProfile, AlpacaAPIKeys
+
+class AlpacaKeysSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AlpacaAPIKeys
+        fields = ('user_id', 'key_id', 'secret_key')
 
 class TodoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -67,4 +74,3 @@ class FirstLoginSerializer(serializers.Serializer):
         if user and user.is_active:
             return user
         raise serializers.ValidationError("Unable to log in with provided credentials.")
-
