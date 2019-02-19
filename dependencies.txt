@@ -6,4 +6,8 @@ psycopg2
 Pillow
 requests
 django-environ
+django-fernet-fields
 twilio
+alpaca-trade-api
+numpy
+pandas
