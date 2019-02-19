@@ -99,16 +99,25 @@ class LoginFactorAPI(generics.GenericAPIView):
   """
     Check if code for given user is correct and respond with token
   """
+  
   def post(self, request, *args, **kwargs):
-    print(request.data['username'])
-    print(request.data['code'])
-    user = User.objects.get(username=request.data['username'])
-    profile = UserProfile.objects.get(user=user)
+    try:
+      user = User.objects.get(username=request.data['username'])
+    except User.DoesNotExist:
+      print("user DNE")
+    login_serializer = LoginUserSerializer(data=request.data)
+    profile_serializer = UserProfileSerializer(data=request.data)
+    if not login_serializer.is_valid(raise_exception=ValueError):
+      print("There was an error validating the user (login serializer)")
+    print("get instance of profile object...")
+    # get instance of profile object
+    user_prof = UserProfile.objects.get(user=user)
 
     code = request.data['code']
-    print("here")
 
-    if code == profile['code']:
+    user = login_serializer.validated_data
+    if code == user_prof.code:
+      print("here")
       return Response({
         "message": "code correct",
         "token": AuthToken.objects.create(user)
