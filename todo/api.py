@@ -1,11 +1,13 @@
 from rest_framework import viewsets, permissions, generics
 from rest_framework.response import Response
+from rest_framework import status
 
 from knox.models import AuthToken
 from knox.auth import TokenAuthentication
 
 from .models import Todo, UserProfile
-from .serializers import TodoSerializer, CreateUserSerializer, UserSerializer, LoginUserSerializer, FirstLoginSerializer, UserProfileSerializer, ExtUserProfileSerializer
+from .serializers import TodoSerializer, CreateUserSerializer, UserSerializer, LoginUserSerializer, \
+    FirstLoginSerializer, UserProfileSerializer, ExtUserProfileSerializer, AlpacaKeysSerializer
 
 from .utils.messages import Utils
 
@@ -167,3 +169,39 @@ class FirstLoginAPI(generics.GenericAPIView):
       "user": user,
       "error": "there was an error"
     }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AlpacaKeysAPI(generics.GenericAPIView):
+
+  def post(self, request, *args, **kwargs):
+      """ Add an Alpaca key pair """
+      try:
+          user = User.objects.get(username=request.data['user_id'])
+      except User.DoesNotExist:
+          print("user DNE")
+
+      serializer = AlpacaKeysSerializer(data=request.DATA)
+      if not serializer.is_valid():
+          return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+      else:
+          k = AlpacaKeysAPI(user_id=request.data['user_id'], key_id=request.data['key_id'], secret_id=request.data['secret_id'])
+          k.save()
+          request.data['user_id'] = k.pk  # return id
+          return Response(request.DATA, status=status.HTTP_201_CREATED)
+
+  def put(self, request, *args, **kwargs):
+      """ Update an Alpaca key pair """
+
+      try:
+          user = User.objects.get(username=request.data['user_id'])
+      except User.DoesNotExist:
+          print("user DNE")
+
+      serializer = TodoSerializer(data=request.DATA)
+      if not serializer.is_valid():
+          return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+      else:
+          k = AlpacaKeysAPI(user_id=request.data['user_id'], key_id=request.data['key_id'], secret_id=request.data['secret_id'])
+          k.save()
+          return Response(status=status.HTTP_200_OK)
