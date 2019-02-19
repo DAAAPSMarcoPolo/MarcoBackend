@@ -1,7 +1,7 @@
 from django.conf.urls import include, url
 from rest_framework import routers
 
-from .api import TodoViewSet, AdminRegistrationAPI, AddUserAPI, LoginAPI, FirstLoginAPI, LoginFactorAPI, AlpacaKeysAPI
+from .api import TodoViewSet, AdminRegistrationAPI, AddUserAPI, LoginAPI, FirstLoginAPI, LoginFactorAPI, AlpacaKeysAPI, GetPictureAPI, AddPictureAPI
 
 router = routers.DefaultRouter()
 router.register('todos', TodoViewSet, 'todos')
@@ -19,6 +19,10 @@ urlpatterns = [
   # update profile on first login
   url("^auth/firstlogin/$", FirstLoginAPI.as_view()),
   # Update the alpaca keys
-  url("^api/alpaca/$", AlpacaKeysAPI.as_view())
+  url("^api/alpaca/$", AlpacaKeysAPI.as_view()),
+  # Get the profile picture 
+  url("^api/getpicture/$", GetPictureAPI.as_view()),
+  # Get the profile picture 
+  url("^api/addpicture/$", AddPictureAPI.as_view())
 
 ]

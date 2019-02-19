@@ -169,7 +169,15 @@ class FirstLoginAPI(generics.GenericAPIView):
       "user": user,
       "error": "there was an error"
     }, status=status.HTTP_400_BAD_REQUEST)
+class GetPictureAPI(generics.GenericAPIView):
+  """GET the user profile picture"""
+  def get(self, request):
+    print("Hello")
 
+class AddPictureAPI(generics.GenericAPIView):
+  """Add a picture to the user profile picture"""
+  def post(self, request, *args, **kwargs):
+    print("Hello")
 
 class AlpacaKeysAPI(generics.GenericAPIView):
 
