@@ -1,3 +1,13 @@
 Django
 djangorestframework
 django-cors-headers
+django-rest-knox
+psycopg2
+Pillow
+requests
+django-environ
+django-fernet-fields
+twilio
+alpaca-trade-api
+numpy
+pandas

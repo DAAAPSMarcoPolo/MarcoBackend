@@ -11,10 +11,18 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import environ
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
+
+# reading .env file
+environ.Env.read_env()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
@@ -23,10 +31,16 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'i4d4ojj4$occ@yl9t(t6-pnuc#&k59dpypy@_2-7&ie#6$tgz2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = ['159.89.230.12','0.0.0.0','127.0.0.1', 'marcopoloinvestment.club']
+ALLOWED_HOSTS = ['159.89.230.12','0.0.0.0','127.0.0.1', 'marcopoloinvestment.club', 'localhost']
 
+# .env variables
+EMAIL_DOMAIN = env('EMAIL_DOMAIN')
+EMAIL_KEY = env('EMAIL_KEY')
+EMAIL_FROM = env('EMAIL_FROM')
+TWILIO_ACC_SID = env('TWILIO_ACC_SID')
+TWILIO_AUTH_TOKEN = env('TWILIO_AUTH_TOKEN')
 
 # Application definition
 
@@ -39,7 +53,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'todo',
     'rest_framework',
-    'corsheaders'
+    'corsheaders',
+    'knox'
 ]
 
 MIDDLEWARE = [
@@ -52,6 +67,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+  'DEFAULT_AUTHENTICATION_CLASSES': ('knox.auth.TokenAuthentication',),
+}
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -79,8 +98,12 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'MarcoPolo',
+        'USER': env('DB_USER'),
+        'PASSWORD':  env('DB_PASSWORD'),
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
 
