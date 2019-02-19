@@ -7,4 +7,8 @@ Pillow
 requests
 django-environ
 twilio
-environ
+django-fernet-fields
+twilio
+alpaca-trade-api
+numpy
+pandas
