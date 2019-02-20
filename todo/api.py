@@ -173,11 +173,19 @@ class GetPictureAPI(generics.GenericAPIView):
   """GET the user profile picture"""
   def get(self, request):
     print("Hello")
+    try:
+      user = User.objects.get(username=request.data['username'])
+    except User.DoesNotExist:
+      print("user DNE")
 
 class AddPictureAPI(generics.GenericAPIView):
   """Add a picture to the user profile picture"""
   def post(self, request, *args, **kwargs):
     print("Hello")
+    try:
+      user = User.objects.get(username=request.data['username'])
+    except User.DoesNotExist:
+      print("user DNE")
 
 class AlpacaKeysAPI(generics.GenericAPIView):
 
