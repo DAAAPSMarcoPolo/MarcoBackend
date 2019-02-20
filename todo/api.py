@@ -169,23 +169,23 @@ class FirstLoginAPI(generics.GenericAPIView):
       "user": user,
       "error": "there was an error"
     }, status=status.HTTP_400_BAD_REQUEST)
-class GetPictureAPI(generics.GenericAPIView):
-  """GET the user profile picture"""
-  def get(self, request):
-    print("Hello")
-    try:
-      user = User.objects.get(username=request.data['username'])
-    except User.DoesNotExist:
-      print("user DNE")
 
-class AddPictureAPI(generics.GenericAPIView):
-  """Add a picture to the user profile picture"""
-  def post(self, request, *args, **kwargs):
+class PictureAPI(generics.GenericAPIView):
+  def get(self, request): 
+    return Response(status=status.HTTP_200_OK)
+  def post(self, request):
     print("Hello")
     try:
       user = User.objects.get(username=request.data['username'])
     except User.DoesNotExist:
       print("user DNE")
+      return Response(status=status.HTTP_404_NOT_FOUND)
+    profile_serializer = UserProfileSerializer(data=request.data)
+    if profile_serializer.is_valid(): 
+      profile_serializer.save()
+      return Response(profile_serializer.data, status=status.HTTP_201_CREATED)
+    else:
+      return Response(profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
 
 class AlpacaKeysAPI(generics.GenericAPIView):
 
