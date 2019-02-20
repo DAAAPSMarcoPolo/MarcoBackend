@@ -163,3 +163,20 @@ class FirstLoginAPI(generics.GenericAPIView):
         "message": "profile updated."
       })
 
+class UserManagementAPI(generics.GenericAPIView):
+  authentication_classes = (TokenAuthentication,)
+  permission_classes = (permissions.IsAuthenticated,permissions.IsAdminUser)
+
+  # send list of current users
+  def get(self, request, *args, **kwargs):
+    users = User.objects.values('username')
+    return Response({"users": users})
+
+  def delete(self, request, *args, **kwargs):
+    # TODO possibly add try/except here?
+    username = request.data['username']
+    print(username)
+    user = User.objects.get(username=username)
+    user.is_active = False
+    user.save()
+    return Response({"message": "user deleted."})

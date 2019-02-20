@@ -1,13 +1,14 @@
 from django.conf.urls import include, url
 from rest_framework import routers
 
-from .api import TodoViewSet, AdminRegistrationAPI, AddUserAPI, LoginAPI, FirstLoginAPI, LoginFactorAPI
+from .api import TodoViewSet, AdminRegistrationAPI, AddUserAPI, LoginAPI, FirstLoginAPI, LoginFactorAPI, UserManagementAPI
 
 router = routers.DefaultRouter()
 router.register('todos', TodoViewSet, 'todos')
 
 urlpatterns = [
   url("^", include(router.urls)),
+  url("users/list/$", UserManagementAPI.as_view()),
   url("^auth/adduser/$", AddUserAPI.as_view()),
   # TODO remove in production
   # register the admin initially
