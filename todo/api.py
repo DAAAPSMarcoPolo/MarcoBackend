@@ -151,6 +151,7 @@ class FirstLoginAPI(generics.GenericAPIView):
         "message": "UpdateAuthUserSerializer invalid."
       })
     profile = UserProfile.objects.get(user=user)
+    request.data['firstlogin'] = False
     profile_serializer = UserProfileSerializer(profile, data=request.data, partial=True)
     if profile_serializer.is_valid():
       profile_serializer.save()
