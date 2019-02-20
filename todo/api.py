@@ -7,7 +7,7 @@ from knox.auth import TokenAuthentication
 
 from .models import Todo, UserProfile
 from .serializers import TodoSerializer, CreateUserSerializer, UserSerializer, LoginUserSerializer, \
-    FirstLoginSerializer, UserProfileSerializer, ExtUserProfileSerializer, AlpacaKeysSerializer
+    FirstLoginSerializer, UserProfileSerializer, ExtUserProfileSerializer, AlpacaKeysSerializer, UpdateAuthUserSerializer
 
 from .utils.messages import Utils
 
@@ -70,10 +70,11 @@ class LoginAPI(generics.GenericAPIView):
         # only send token if not firstlogin
         if userData['profile']['firstlogin']:
           return Response({
-            "user": userData,
+            "message": "first login",
+            "token": AuthToken.objects.create(user)
           })
+        # 2 factor
         else:
-          # TODO 2 factor things...
           # create code, send text and send to next page
           code = get_random_string(length=6, allowed_chars='1234567890')
           profile = UserProfile.objects.get(user=user)
@@ -93,7 +94,6 @@ class LoginAPI(generics.GenericAPIView):
                       to=userData['profile']['phone_number']
                     )
           return Response({
-            "user": userData,
             "message": "code sent"
           })
         
@@ -131,6 +131,8 @@ class LoginFactorAPI(generics.GenericAPIView):
 
 
 class FirstLoginAPI(generics.GenericAPIView):
+  serializer_class = FirstLoginSerializer
+
   """
     Update UserProfile on first login
       - given username and password
@@ -138,37 +140,30 @@ class FirstLoginAPI(generics.GenericAPIView):
   """
   # TODO refactor
   def post(self, request, *args, **kwargs):
-    # find user
-    print("Finding a user..." + request.data['username'])
-    try:
-      user = User.objects.get(username=request.data['username'])
-    except User.DoesNotExist:
-      print("user DNE")
-    login_serializer = LoginUserSerializer(data=request.data)
-    profile_serializer = UserProfileSerializer(data=request.data)
-    if not login_serializer.is_valid(raise_exception=ValueError):
-      print("There was an error validating the user (login serializer)")
-    print("get instance of profile object...")
-    # get instance of profile object
-    user_prof = UserProfile.objects.get(user=user)
-    print(user_prof.user_id)
-    profile_serializer = UserProfileSerializer(user_prof, data=request.data, partial=True)
-    if profile_serializer.is_valid(raise_exception=ValueError):
-      # update password
-      user = login_serializer.validated_data
-      user.set_password(profile_serializer.validated_data['new_password'])
-      user.save()
-      # update profile info
-      profile_serializer.save()
+    serializer = self.get_serializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    authorized_user = serializer.validated_data
+    # update auth_user
+    user = User.objects.get(username=request.data['username'])
+    user_serializer = UpdateAuthUserSerializer(user, data=request.data, partial=True)
+    if user_serializer.is_valid():
+      user_serializer.save()
+    else:
       return Response({
-        "user": UserSerializer(user, context=self.get_serializer_context()).data,
-        "token": AuthToken.objects.create(user)
-        })
-    # TODO better response...
+        "message": "UpdateAuthUserSerializer invalid."
+      })
+    profile = UserProfile.objects.get(user=user)
+    request.data['firstlogin'] = False
+    profile_serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+    if profile_serializer.is_valid():
+      profile_serializer.save()
+    else:
+      return Response({
+        "message": "UserProfileSerializer invalid."
+      })
     return Response({
-      "user": user,
-      "error": "there was an error"
-    }, status=status.HTTP_400_BAD_REQUEST)
+      "message": "profile updated."
+    })
 
 
 class AlpacaKeysAPI(generics.GenericAPIView):
@@ -205,3 +200,22 @@ class AlpacaKeysAPI(generics.GenericAPIView):
           k = AlpacaKeysAPI(user_id=request.data['user_id'], key_id=request.data['key_id'], secret_id=request.data['secret_id'])
           k.save()
           return Response(status=status.HTTP_200_OK)
+        
+
+class UserManagementAPI(generics.GenericAPIView):
+  authentication_classes = (TokenAuthentication,)
+  permission_classes = (permissions.IsAuthenticated,permissions.IsAdminUser)
+
+  # send list of current users
+  def get(self, request, *args, **kwargs):
+    users = User.objects.values('username')
+    return Response({"users": users})
+
+  def delete(self, request, *args, **kwargs):
+    # TODO possibly add try/except here?
+    username = request.data['username']
+    print(username)
+    user = User.objects.get(username=username)
+    user.is_active = False
+    user.save()
+    return Response({"message": "user deleted."})
