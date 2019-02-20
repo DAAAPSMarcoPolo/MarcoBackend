@@ -173,15 +173,17 @@ class FirstLoginAPI(generics.GenericAPIView):
 class PictureAPI(generics.GenericAPIView):
   def get(self, request): 
     return Response(status=status.HTTP_200_OK)
-  def post(self, request):
+  def put(self, request):
     print("Hello")
     try:
       user = User.objects.get(username=request.data['username'])
-    except User.DoesNotExist:
+      profile = UserProfile.objects.get(user=request.data['user'])
+    except UserProfile.DoesNotExist or User.DoesNotExist:
       print("user DNE")
       return Response(status=status.HTTP_404_NOT_FOUND)
-    profile_serializer = UserProfileSerializer(data=request.data)
+    profile_serializer = UserProfileSerializer(profile, data=request.data, partial=True)
     if profile_serializer.is_valid(): 
+      profile_serializer.update(user, request.data)
       profile_serializer.save()
       return Response(profile_serializer.data, status=status.HTTP_201_CREATED)
     else:

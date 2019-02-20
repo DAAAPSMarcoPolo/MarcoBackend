@@ -13,7 +13,7 @@ class UserProfile(models.Model):
     code = models.CharField(max_length=6)
     phone_number = models.CharField(max_length=20)
     code_created = models.DateTimeField(null=True)
-    avatar = models.ImageField(upload_to=get_image_path, blank=True, null=True)
+    avatar = models.ImageField(upload_to='uploads/', blank=True, null=True)
 
 class AlpacaAPIKeys(models.Model): 
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
