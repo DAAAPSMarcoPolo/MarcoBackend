@@ -138,7 +138,7 @@ class LoginFactorAPI(generics.GenericAPIView):
         user_prof = UserProfile.objects.get(user=user)
 
         code = request.data['code']
-        isAdmin = user.isAdmin
+        isAdmin = user.is_staff
         user = login_serializer.validated_data
 
         if code == user_prof.code:
