@@ -18,7 +18,7 @@ class UserProfile(models.Model):
 class AlpacaAPIKeys(models.Model): 
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     key_id = EncryptedTextField(max_length=None)
-    secret_key = EncryptedTextField(max_length=None)
+    secret_key = EncryptedTextField(max_length=120)
 
 class Todo(models.Model):
     title = models.CharField(max_length=120)

@@ -10,7 +10,7 @@ from .models import Todo, UserProfile, AlpacaAPIKeys
 class AlpacaKeysSerializer(serializers.ModelSerializer):
     class Meta:
         model = AlpacaAPIKeys
-        fields = ('user_id', 'key_id', 'secret_key')
+        fields = ('user', 'key_id', 'secret_key')
 
 class TodoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -63,8 +63,10 @@ class LoginUserSerializer(serializers.Serializer):
         raise serializers.ValidationError("Unable to log in with provided credentials.")
 
 class FirstLoginSerializer(serializers.Serializer):
-    # todo add fields that should be updated on first login
-    username = serializers.IntegerField()
+    # fields that must be updated on first login
+    username = serializers.CharField(allow_blank=False)
+    first_name = serializers.CharField(allow_blank=False)
+    last_name = serializers.CharField(allow_blank=False)
     password = serializers.CharField(allow_blank=False)
     new_password = serializers.CharField(allow_blank=False)
     phone_number = serializers.CharField(allow_blank=False)
@@ -74,3 +76,38 @@ class FirstLoginSerializer(serializers.Serializer):
         if user and user.is_active:
             return user
         raise serializers.ValidationError("Unable to log in with provided credentials.")
+
+class UpdateAuthUserSerializer(serializers.Serializer):
+  first_name = serializers.CharField()
+  last_name = serializers.CharField()
+  username = serializers.CharField()
+  password = serializers.CharField(required=False)
+  new_password = serializers.CharField(required=False)
+
+  class Meta:
+    model = User
+    fields: ('first_name', 'last_name', 'username', 'password')
+    extra_kwargs = {'password': {'write_only': True}}
+  
+  def update(self, instance, validated_data):
+    instance.first_name = validated_data.get('first_name')
+    instance.last_name = validated_data.get('last_name')
+    instance.username = validated_data.get('username')
+    new_pass = validated_data.get('new_password')
+    old_pass = validated_data.get('password')
+    if new_pass:
+      if not instance.check_password(validated_data.get('password')):
+        instance.save()
+        return Response({"message": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
+      instance.set_password(new_pass)
+    instance.save()
+    return instance
+
+class UpdateProfileSerializer(serializers.Serializer):
+  class Meta:
+    model = UserProfile
+    fields: ('firstlogin', 'avatar', 'phone_number')
+
+  
+    
+      

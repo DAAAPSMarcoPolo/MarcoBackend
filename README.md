@@ -46,3 +46,8 @@ Backend:
 
 ####Do this to seed the first user
 - Run `python manage.py loaddata users` to import `users.json`
+
+####Database requirements for development (due to firstlogin not working)
+- firstlogin = false
+- your phone number must be in userprofile
+- twilio must validate your phone number

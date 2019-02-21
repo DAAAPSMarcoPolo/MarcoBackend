@@ -187,3 +187,5 @@ db.sqlite3
 *.code-workspace
 media/uploads/*
 
+
+users.json
