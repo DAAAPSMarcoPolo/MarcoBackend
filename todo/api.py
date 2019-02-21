@@ -264,8 +264,6 @@ class UserManagementAPI(generics.GenericAPIView):
 
         return Response({"message": "user deleted."})
 
-
-
 class AlpacaKeysAPI(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         """ Add an Alpaca key pair """
