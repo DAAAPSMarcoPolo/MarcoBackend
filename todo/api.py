@@ -242,11 +242,11 @@ class UserSettingsAPI(generics.GenericAPIView):
 
 class UserManagementAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
-    #permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser)
+    permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser)
 
     # send list of current users
     def get(self, request, *args, **kwargs):
-        users = User.objects.values('username')
+        users = User.objects.values('username', 'is_active')
         print(users)
         return Response({"users": users})
 
