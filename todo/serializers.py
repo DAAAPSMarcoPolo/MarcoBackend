@@ -86,7 +86,7 @@ class UpdateAuthUserSerializer(serializers.Serializer):
 
   class Meta:
     model = User
-    fields: ('first_name', 'last_name', 'username', 'password')
+    fields = ('first_name', 'last_name', 'username', 'password')
     extra_kwargs = {'password': {'write_only': True}}
   
   def update(self, instance, validated_data):
