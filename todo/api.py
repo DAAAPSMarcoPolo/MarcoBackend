@@ -214,12 +214,11 @@ class UserManagementAPI(generics.GenericAPIView):
     return Response({"users": users})
 
   def delete(self, request, *args, **kwargs):
-    # TODO possibly add try/except here?
     # deactivate user
     username = request.data['username']
     print(username)
     user = User.objects.get(username=username)
-    # user.is_active = False
+    user.is_active = False
     user.save()
 
     # send out text
