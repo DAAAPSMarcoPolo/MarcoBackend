@@ -15,11 +15,13 @@ from .utils.messages import Utils
 from django.contrib.auth.models import User
 
 import traceback
+import re
 from datetime import datetime
 from django.utils.crypto import get_random_string
 from django.conf import settings
 
 from twilio.rest import Client
+
 
 
 class TodoViewSet(viewsets.ModelViewSet):
@@ -55,15 +57,22 @@ class AddUserAPI(generics.GenericAPIView):
         user = serializer.save()
         username = request.data['username']
         password = request.data['password']
+        # regex to check email
+        pattern = re.compile("^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$")
+        if not pattern.match(username):
+          return Response({
+            "error": "invalid email address"
+          }, status=status.HTTP_400_BAD_REQUEST)
         msg = "Username: " + username + "\nPassword: " + password
         Utils.send_email(self, message=msg, subject="MarcoPolo Login Credentials", recipients=[username])
+        # TODO test
         # send out text
         users = User.objects.filter(is_active=True).select_related('profile').values('username',
                                                                                      'profile__phone_number')
         for u in users:
             print(u)
             client = Client(settings.TWILIO_ACC_SID, settings.TWILIO_AUTH_TOKEN)
-            body = username + " has been removed from MarcoPolo 😩✌️"
+            body = username + " has been added to MarcoPolo 🤗😎"
             try:
                 client.messages.create(
                     body=body,
@@ -71,7 +80,8 @@ class AddUserAPI(generics.GenericAPIView):
                     to=u['profile__phone_number']
                 )
             except Exception as e:
-                print("Twilio error:" + e)
+                print("Twilio error:")
+                print(e)
         return Response({
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
             "token": AuthToken.objects.create(user)
@@ -147,8 +157,8 @@ class LoginFactorAPI(generics.GenericAPIView):
             })
         else:
             return Response({
-                "message": "incorrect code"
-            })
+                "error": "incorrect code"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 class FirstLoginAPI(generics.GenericAPIView):
     serializer_class = FirstLoginSerializer
@@ -187,29 +197,28 @@ class FirstLoginAPI(generics.GenericAPIView):
         })
 
 class PictureAPI(generics.GenericAPIView):
+  authentication_classes = (TokenAuthentication,)
+  permission_classes = (permissions.IsAuthenticated,)
   def get(self, request): 
     try:
-      user = User.objects.get(username=request.data['username'])
-      profile = UserProfile.objects.get(user=request.data['user'])
+      user = User.objects.get(username=self.request.user.username)
+      profile = UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist or User.DoesNotExist:
       print("user DNE")
       return Response(status=status.HTTP_404_NOT_FOUND)
-    return Response(profile.avatar.url , status=status.HTTP_200_OK, content_type="image/jpeg")
+    return Response(profile.avatar.url , status=status.HTTP_200_OK)
 
   def put(self, request):
     try:
-      user = User.objects.get(username=request.data['username'])
-      profile = UserProfile.objects.get(user=request.data['user'])
+      user = User.objects.get(username=self.request.user.username)
+      profile = UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist or User.DoesNotExist:
       print("user DNE")
       return Response(status=status.HTTP_404_NOT_FOUND)
-    profile_serializer = UserProfileSerializer(profile, data=request.data, partial=True)
-    if profile_serializer.is_valid(): 
-      profile_serializer.update(user, request.data)
-      profile_serializer.save()
-      return Response(profile_serializer.data, status=status.HTTP_201_CREATED)
-    else:
-      return Response(profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    profile.avatar = request.data['avatar']
+    user.save()
+    profile.save()
+    return Response(status=status.HTTP_200_OK)
 
 class UserSettingsAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
@@ -242,11 +251,11 @@ class UserSettingsAPI(generics.GenericAPIView):
 
 class UserManagementAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
-    #permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser)
+    permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser)
 
     # send list of current users
     def get(self, request, *args, **kwargs):
-        users = User.objects.values('username')
+        users = User.objects.values('username', 'is_active')
         print(users)
         return Response({"users": users})
 
@@ -272,7 +281,8 @@ class UserManagementAPI(generics.GenericAPIView):
                     to=u['profile__phone_number']
                 )
             except Exception as e:
-                print("Twilio error:" + e)
+                print("Twilio error:")
+                print(e)
 
         return Response({"message": "user deleted."})
 
