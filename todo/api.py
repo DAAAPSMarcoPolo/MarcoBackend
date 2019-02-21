@@ -116,13 +116,15 @@ class LoginFactorAPI(generics.GenericAPIView):
     user_prof = UserProfile.objects.get(user=user)
 
     code = request.data['code']
-
+    isAdmin = user.isAdmin
     user = login_serializer.validated_data
+
     if code == user_prof.code:
       print("here")
       return Response({
         "message": "code correct",
-        "token": AuthToken.objects.create(user)
+        "token": AuthToken.objects.create(user),
+        "isAdmin": isAdmin
       })
     else:
       return Response({
@@ -213,9 +215,26 @@ class UserManagementAPI(generics.GenericAPIView):
 
   def delete(self, request, *args, **kwargs):
     # TODO possibly add try/except here?
+    # deactivate user
     username = request.data['username']
     print(username)
     user = User.objects.get(username=username)
-    user.is_active = False
+    # user.is_active = False
     user.save()
+
+    # send out text
+    users = User.objects.filter(is_active=True).select_related('profile').values('username', 'profile__phone_number')
+    for u in users:
+      print(u)
+      client = Client(settings.TWILIO_ACC_SID, settings.TWILIO_AUTH_TOKEN)
+      body = username + " has been removed from MarcoPolo 😩✌️"
+      try:
+        client.messages.create(
+          body=body,
+          from_='8475586630',
+          to=u['profile__phone_number']
+        )
+      except Exception as e:
+        print("Twilio error:" + e)
+
     return Response({"message": "user deleted."})
