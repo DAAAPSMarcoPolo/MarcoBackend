@@ -11,3 +11,4 @@ twilio
 alpaca-trade-api
 numpy
 pandas
+TA-Lib
