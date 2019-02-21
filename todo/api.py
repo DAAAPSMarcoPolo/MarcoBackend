@@ -1,11 +1,12 @@
 from rest_framework import viewsets, permissions, generics
 from rest_framework.response import Response
+from django.http import JsonResponse
 from rest_framework import status
 
 from knox.models import AuthToken
 from knox.auth import TokenAuthentication
 
-from .models import Todo, UserProfile
+from .models import Todo, UserProfile, AlpacaAPIKeys
 from .serializers import TodoSerializer, CreateUserSerializer, UserSerializer, LoginUserSerializer, \
     FirstLoginSerializer, UserProfileSerializer, ExtUserProfileSerializer, AlpacaKeysSerializer
 
@@ -20,12 +21,14 @@ from django.conf import settings
 
 from twilio.rest import Client
 
-class TodoViewSet(viewsets.ModelViewSet):
-  permission_classes = [permissions.IsAuthenticated, ]
-  serializer_class = TodoSerializer
 
-  def get_queryset(self):
-    return self.request.user.todos.all()
+class TodoViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, ]
+    serializer_class = TodoSerializer
+
+    def get_queryset(self):
+        return self.request.user.todos.all()
+
 
 # TODO remove in production
 class AdminRegistrationAPI(generics.GenericAPIView):
@@ -40,9 +43,10 @@ class AdminRegistrationAPI(generics.GenericAPIView):
             "token": AuthToken.objects.create(user)
         })
 
+
 class AddUserAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,permissions.IsAdminUser)
+    permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser)
 
     serializer_class = CreateUserSerializer
 
@@ -59,6 +63,7 @@ class AddUserAPI(generics.GenericAPIView):
             "token": AuthToken.objects.create(user)
         })
 
+
 class LoginAPI(generics.GenericAPIView):
     serializer_class = LoginUserSerializer
 
@@ -69,139 +74,161 @@ class LoginAPI(generics.GenericAPIView):
         userData = UserSerializer(user, context=self.get_serializer_context()).data
         # only send token if not firstlogin
         if userData['profile']['firstlogin']:
-          return Response({
-            "user": userData,
-          })
+            return Response({
+                "user": userData,
+            })
         else:
-          # TODO 2 factor things...
-          # create code, send text and send to next page
-          code = get_random_string(length=6, allowed_chars='1234567890')
-          profile = UserProfile.objects.get(user=user)
-          now = datetime.now()
-          profile_serializer = ExtUserProfileSerializer(profile, data={ "code": code, "code_created": now}, partial=True)
-          try:
-            profile_serializer.is_valid(raise_exception=True)
-            profile_serializer.save()
-          except Exception as err:
-            traceback.print_exc()
-          # send text
-          client = Client(settings.TWILIO_ACC_SID, settings.TWILIO_AUTH_TOKEN)
-          body = "Your MarcoPolo 2-factor code is: " + code
-          message = client.messages.create(
-                      body=body,
-                      from_='8475586630',
-                      to=userData['profile']['phone_number']
-                    )
-          return Response({
-            "user": userData,
-            "message": "code sent"
-          })
-        
+            # TODO 2 factor things...
+            # create code, send text and send to next page
+            code = get_random_string(length=6, allowed_chars='1234567890')
+            profile = UserProfile.objects.get(user=user)
+            now = datetime.now()
+            profile_serializer = ExtUserProfileSerializer(profile, data={"code": code, "code_created": now},
+                                                          partial=True)
+            try:
+                profile_serializer.is_valid(raise_exception=True)
+                profile_serializer.save()
+            except Exception as err:
+                traceback.print_exc()
+            # send text
+            client = Client(settings.TWILIO_ACC_SID, settings.TWILIO_AUTH_TOKEN)
+            body = "Your MarcoPolo 2-factor code is: " + code
+            message = client.messages.create(
+                body=body,
+                from_='8475586630',
+                to=userData['profile']['phone_number']
+            )
+            return Response({
+                "user": userData,
+                "message": "code sent"
+            })
+
+
 class LoginFactorAPI(generics.GenericAPIView):
-  """
-    Check if code for given user is correct and respond with token
-  """
-  
-  def post(self, request, *args, **kwargs):
-    try:
-      user = User.objects.get(username=request.data['username'])
-    except User.DoesNotExist:
-      print("user DNE")
-    login_serializer = LoginUserSerializer(data=request.data)
-    profile_serializer = UserProfileSerializer(data=request.data)
-    if not login_serializer.is_valid(raise_exception=ValueError):
-      print("There was an error validating the user (login serializer)")
-    print("get instance of profile object...")
-    # get instance of profile object
-    user_prof = UserProfile.objects.get(user=user)
+    """
+      Check if code for given user is correct and respond with token
+    """
 
-    code = request.data['code']
+    def post(self, request, *args, **kwargs):
+        try:
+            user = User.objects.get(username=request.data['username'])
+        except User.DoesNotExist:
+            print("user DNE")
+        login_serializer = LoginUserSerializer(data=request.data)
+        profile_serializer = UserProfileSerializer(data=request.data)
+        if not login_serializer.is_valid(raise_exception=ValueError):
+            print("There was an error validating the user (login serializer)")
+        print("get instance of profile object...")
+        # get instance of profile object
+        user_prof = UserProfile.objects.get(user=user)
 
-    user = login_serializer.validated_data
-    if code == user_prof.code:
-      print("here")
-      return Response({
-        "message": "code correct",
-        "token": AuthToken.objects.create(user)
-      })
-    else:
-      return Response({
-        "message": "incorrect code"
-      })
+        code = request.data['code']
+
+        user = login_serializer.validated_data
+        if code == user_prof.code:
+            print("here")
+            return Response({
+                "message": "code correct",
+                "token": AuthToken.objects.create(user)
+            })
+        else:
+            return Response({
+                "message": "incorrect code"
+            })
 
 
 class FirstLoginAPI(generics.GenericAPIView):
-  """
-    Update UserProfile on first login
-      - given username and password
-      - updating password and user profile
-  """
-  # TODO refactor
-  def post(self, request, *args, **kwargs):
-    # find user
-    print("Finding a user..." + request.data['username'])
-    try:
-      user = User.objects.get(username=request.data['username'])
-    except User.DoesNotExist:
-      print("user DNE")
-    login_serializer = LoginUserSerializer(data=request.data)
-    profile_serializer = UserProfileSerializer(data=request.data)
-    if not login_serializer.is_valid(raise_exception=ValueError):
-      print("There was an error validating the user (login serializer)")
-    print("get instance of profile object...")
-    # get instance of profile object
-    user_prof = UserProfile.objects.get(user=user)
-    print(user_prof.user_id)
-    profile_serializer = UserProfileSerializer(user_prof, data=request.data, partial=True)
-    if profile_serializer.is_valid(raise_exception=ValueError):
-      # update password
-      user = login_serializer.validated_data
-      user.set_password(profile_serializer.validated_data['new_password'])
-      user.save()
-      # update profile info
-      profile_serializer.save()
-      return Response({
-        "user": UserSerializer(user, context=self.get_serializer_context()).data,
-        "token": AuthToken.objects.create(user)
-        })
-    # TODO better response...
-    return Response({
-      "user": user,
-      "error": "there was an error"
-    }, status=status.HTTP_400_BAD_REQUEST)
+    """
+      Update UserProfile on first login
+        - given username and password
+        - updating password and user profile
+    """
+
+    # TODO refactor
+    def post(self, request, *args, **kwargs):
+        # find user
+        print("Finding a user..." + request.data['username'])
+        try:
+            user = User.objects.get(username=request.data['username'])
+        except User.DoesNotExist:
+            print("user DNE")
+        login_serializer = LoginUserSerializer(data=request.data)
+        profile_serializer = UserProfileSerializer(data=request.data)
+        if not login_serializer.is_valid(raise_exception=ValueError):
+            print("There was an error validating the user (login serializer)")
+        print("get instance of profile object...")
+        # get instance of profile object
+        user_prof = UserProfile.objects.get(user=user)
+        print(user_prof.user_id)
+        profile_serializer = UserProfileSerializer(user_prof, data=request.data, partial=True)
+        if profile_serializer.is_valid(raise_exception=ValueError):
+            # update password
+            user = login_serializer.validated_data
+            user.set_password(profile_serializer.validated_data['new_password'])
+            user.save()
+            # update profile info
+            profile_serializer.save()
+            return Response({
+                "user": UserSerializer(user, context=self.get_serializer_context()).data,
+                "token": AuthToken.objects.create(user)
+            })
+        # TODO better response...
+        return Response({
+            "user": user,
+            "error": "there was an error"
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AlpacaKeysAPI(generics.GenericAPIView):
 
-  def post(self, request, *args, **kwargs):
-      """ Add an Alpaca key pair """
-      try:
-          user = User.objects.get(username=request.data['user_id'])
-      except User.DoesNotExist:
-          print("user DNE")
+    def post(self, request, *args, **kwargs):
+        """ Add an Alpaca key pair """
+        try:
+            user = User.objects.get(id=request.data['user'])
+        except User.DoesNotExist:
+            print("user DNE")
 
-      serializer = AlpacaKeysSerializer(data=request.DATA)
-      if not serializer.is_valid():
-          return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-      else:
-          k = AlpacaKeysAPI(user_id=request.data['user_id'], key_id=request.data['key_id'], secret_id=request.data['secret_id'])
-          k.save()
-          request.data['user_id'] = k.pk  # return id
-          return Response(request.DATA, status=status.HTTP_201_CREATED)
+        print(request.data)
+        serializer = AlpacaKeysSerializer(data=request.data)
 
-  def put(self, request, *args, **kwargs):
-      """ Update an Alpaca key pair """
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-      try:
-          user = User.objects.get(username=request.data['user_id'])
-      except User.DoesNotExist:
-          print("user DNE")
+        else:
+            print('saving')
+            serializer.save()
+            print('saved')
+            return Response(request.data, status=status.HTTP_201_CREATED)
 
-      serializer = TodoSerializer(data=request.DATA)
-      if not serializer.is_valid():
-          return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, *args, **kwargs):
+        """ Update an Alpaca key pair """
 
-      else:
-          k = AlpacaKeysAPI(user_id=request.data['user_id'], key_id=request.data['key_id'], secret_id=request.data['secret_id'])
-          k.save()
-          return Response(status=status.HTTP_200_OK)
+        try:
+            user = User.objects.get(id=request.data['user'])
+        except User.DoesNotExist:
+            print("user DNE")
+        try:
+            api_key = AlpacaAPIKeys.objects.get(user_id=request.data['user'])
+            api_key.key_id = request.data['key_id']
+            api_key.secret_key = request.data['secret_key']
+            api_key.save()
+            return Response(status=status.HTTP_200_OK)
+
+        except AlpacaAPIKeys.DoesNotExist:
+            print("API Key not found")
+            return Response("No API key associated with given user", status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+    def get(self, request, *args, **kwargs):
+        """ Update an Alpaca key pair """
+        try:
+            ApiKey = AlpacaAPIKeys.objects.get(user_id=kwargs['user_id'])
+        except AlpacaAPIKeys.DoesNotExist:
+            print("API Key not found")
+            return Response("No API key associated with given user", status=status.HTTP_400_BAD_REQUEST)
+
+        response = AlpacaKeysSerializer(ApiKey, context=self.get_serializer_context()).data
+
+        return Response(response)
