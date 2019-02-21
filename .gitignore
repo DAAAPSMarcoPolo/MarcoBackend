@@ -185,5 +185,7 @@ db.sqlite3
 .idea/
 
 *.code-workspace
+media/uploads/*
+
 
 users.json
