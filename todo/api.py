@@ -211,6 +211,35 @@ class PictureAPI(generics.GenericAPIView):
     else:
       return Response(profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class UserSettingsAPI(generics.GenericAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            # HOW TO GET USER FROM TOKEN: user = User.objects.get(username=self.request.user.username)
+            user = User.objects.select_related('profile') \
+            .values('username', 'first_name', 'last_name', 'profile__phone_number') \
+            .get(username=self.request.user.username)
+        except User.DoesNotExist:
+            print("user DNE")
+            return Response({"message": "could not find user."})
+        return Response({ "user": user })
+    
+    def put(self, request, *args, **kwargs):
+        user = User.objects.get(username=self.request.user.username)
+        profile = UserProfile.objects.get(user=user)
+        
+        user.username = request.data['username']
+        user.first_name = request.data['first_name']
+        user.last_name = request.data['last_name']
+        profile.phone_number = request.data['phone_number']
+        
+        user.save()
+        profile.save()
+
+        return Response({ "message": "updated profile." })
+
 class UserManagementAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser)
