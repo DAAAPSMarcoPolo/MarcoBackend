@@ -55,15 +55,18 @@ class AddUserAPI(generics.GenericAPIView):
         user = serializer.save()
         username = request.data['username']
         password = request.data['password']
+        # regex to check email
+
         msg = "Username: " + username + "\nPassword: " + password
         Utils.send_email(self, message=msg, subject="MarcoPolo Login Credentials", recipients=[username])
+        # TODO test
         # send out text
         users = User.objects.filter(is_active=True).select_related('profile').values('username',
                                                                                      'profile__phone_number')
         for u in users:
             print(u)
             client = Client(settings.TWILIO_ACC_SID, settings.TWILIO_AUTH_TOKEN)
-            body = username + " has been removed from MarcoPolo 😩✌️"
+            body = username + " has been added to MarcoPolo 🤗😎"
             try:
                 client.messages.create(
                     body=body,
@@ -71,7 +74,8 @@ class AddUserAPI(generics.GenericAPIView):
                     to=u['profile__phone_number']
                 )
             except Exception as e:
-                print("Twilio error:" + e)
+                print("Twilio error:")
+                print(e)
         return Response({
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
             "token": AuthToken.objects.create(user)
@@ -272,7 +276,8 @@ class UserManagementAPI(generics.GenericAPIView):
                     to=u['profile__phone_number']
                 )
             except Exception as e:
-                print("Twilio error:" + e)
+                print("Twilio error:")
+                print(e)
 
         return Response({"message": "user deleted."})
 
