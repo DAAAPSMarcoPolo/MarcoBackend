@@ -297,24 +297,6 @@ class AlpacaKeysAPI(generics.GenericAPIView):
 
         return Response(request.data, status=status.HTTP_201_CREATED)
 
-    def put(self, request, *args, **kwargs):
-        """ Update an Alpaca key pair """
-
-        try:
-            user = User.objects.get(id=request.data['user'])
-        except User.DoesNotExist:
-            print("user DNE")
-        try:
-            api_key = AlpacaAPIKeys.objects.get(user_id=request.data['user'])
-            api_key.key_id = request.data['key_id']
-            api_key.secret_key = request.data['secret_key']
-            api_key.save()
-            return Response(status=status.HTTP_200_OK)
-
-        except AlpacaAPIKeys.DoesNotExist:
-            print("API Key not found")
-            return Response("No API key associated with given user", status=status.HTTP_400_BAD_REQUEST)
-
     def get(self, request, *args, **kwargs):
         """ Update an Alpaca key pair """
         try:
