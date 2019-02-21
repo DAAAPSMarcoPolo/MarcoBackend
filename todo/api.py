@@ -43,7 +43,6 @@ class AdminRegistrationAPI(generics.GenericAPIView):
             "token": AuthToken.objects.create(user)
         })
 
-
 class AddUserAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser)
@@ -77,7 +76,6 @@ class AddUserAPI(generics.GenericAPIView):
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
             "token": AuthToken.objects.create(user)
         })
-
 
 class LoginAPI(generics.GenericAPIView):
     serializer_class = LoginUserSerializer
@@ -118,7 +116,6 @@ class LoginAPI(generics.GenericAPIView):
                 "message": "code sent"
             })
 
-
 class LoginFactorAPI(generics.GenericAPIView):
     """
       Check if code for given user is correct and respond with token
@@ -152,7 +149,6 @@ class LoginFactorAPI(generics.GenericAPIView):
             return Response({
                 "message": "incorrect code"
             })
-
 
 class FirstLoginAPI(generics.GenericAPIView):
     serializer_class = FirstLoginSerializer
@@ -213,45 +209,7 @@ class PictureAPI(generics.GenericAPIView):
       profile_serializer.save()
       return Response(profile_serializer.data, status=status.HTTP_201_CREATED)
     else:
-      return Response(profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
-
-class AlpacaKeysAPI(generics.GenericAPIView):
-
-    def post(self, request, *args, **kwargs):
-        """ Add an Alpaca key pair """
-        try:
-            user = User.objects.get(username=request.data['user_id'])
-        except User.DoesNotExist:
-            print("user DNE")
-
-        serializer = AlpacaKeysSerializer(data=request.DATA)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            k = AlpacaKeysAPI(user_id=request.data['user_id'], key_id=request.data['key_id'],
-                              secret_id=request.data['secret_id'])
-            k.save()
-            request.data['user_id'] = k.pk  # return id
-            return Response(request.DATA, status=status.HTTP_201_CREATED)
-
-    def put(self, request, *args, **kwargs):
-        """ Update an Alpaca key pair """
-
-        try:
-            user = User.objects.get(username=request.data['user_id'])
-        except User.DoesNotExist:
-            print("user DNE")
-
-        serializer = TodoSerializer(data=request.DATA)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        else:
-            k = AlpacaKeysAPI(user_id=request.data['user_id'], key_id=request.data['key_id'],
-                              secret_id=request.data['secret_id'])
-            k.save()
-            return Response(status=status.HTTP_200_OK)
-
+      return Response(profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserManagementAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
@@ -292,21 +250,22 @@ class AlpacaKeysAPI(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         """ Add an Alpaca key pair """
         try:
+            print(request.data)
             user = User.objects.get(id=request.data['user'])
         except User.DoesNotExist:
             print("user DNE")
 
-        print(request.data)
-        serializer = AlpacaKeysSerializer(data=request.data)
+        try:
+            api_key, created = AlpacaAPIKeys.objects.get_or_create(user_id=request.data['user'])
+            api_key.key_id = request.data['key_id']
+            api_key.secret_key = request.data['secret_key']
+            api_key.save()
+            print("Successfully updated/created")
+        except Exception as e:
+            print(e)
+            return Response("Could not update/create Alpaca API key", status=status.HTTP_400_BAD_REQUEST)
 
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        else:
-            print('saving')
-            serializer.save()
-            print('saved')
-            return Response(request.data, status=status.HTTP_201_CREATED)
+        return Response(request.data, status=status.HTTP_201_CREATED)
 
     def put(self, request, *args, **kwargs):
         """ Update an Alpaca key pair """
