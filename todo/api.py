@@ -197,29 +197,28 @@ class FirstLoginAPI(generics.GenericAPIView):
         })
 
 class PictureAPI(generics.GenericAPIView):
+  authentication_classes = (TokenAuthentication,)
+  permission_classes = (permissions.IsAuthenticated,)
   def get(self, request): 
     try:
-      user = User.objects.get(username=request.data['username'])
-      profile = UserProfile.objects.get(user=request.data['user'])
+      user = User.objects.get(username=self.request.user.username)
+      profile = UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist or User.DoesNotExist:
       print("user DNE")
       return Response(status=status.HTTP_404_NOT_FOUND)
-    return Response(profile.avatar.url , status=status.HTTP_200_OK, content_type="image/jpeg")
+    return Response(profile.avatar.url , status=status.HTTP_200_OK)
 
   def put(self, request):
     try:
-      user = User.objects.get(username=request.data['username'])
-      profile = UserProfile.objects.get(user=request.data['user'])
+      user = User.objects.get(username=self.request.user.username)
+      profile = UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist or User.DoesNotExist:
       print("user DNE")
       return Response(status=status.HTTP_404_NOT_FOUND)
-    profile_serializer = UserProfileSerializer(profile, data=request.data, partial=True)
-    if profile_serializer.is_valid(): 
-      profile_serializer.update(user, request.data)
-      profile_serializer.save()
-      return Response(profile_serializer.data, status=status.HTTP_201_CREATED)
-    else:
-      return Response(profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    profile.avatar = request.data['avatar']
+    user.save()
+    profile.save()
+    return Response(status=status.HTTP_200_OK)
 
 class UserSettingsAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
