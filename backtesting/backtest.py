@@ -3,13 +3,17 @@ import math
 import statistics
 import logging
 import time
+import sys
 from datetime import datetime, timedelta
 import pandas as pd
 import importlib
-from inspect import isclass
+import pickle
+import pyclbr
+
 
 from market_data import DataFetcher
 from defaultUniverses.sp500 import Universe
+from test_data import Test
 
 # from strategies.strategy_template import Strategy
 
@@ -34,24 +38,95 @@ class Backtest:
     def import_strategy(self):
         try:
             strategy = importlib.import_module('strategies.' + self.strategy)
-            classes = [x for x in dir(strategy) if isclass(getattr(strategy, x))]
-            self.strategy = getattr(strategy, classes[0])()
+            module_info = pyclbr.readmodule('strategies.' + self.strategy)
+
+            class_name = None
+            for item in module_info.values():
+                class_name = item.name
+
+            self.strategy = getattr(strategy, class_name)()
+            self.validate_strategy()
+
         except ImportError as e:
             self.logger.error(e)
-        # try:
-        #     strategy_file = open(self.strategy+'.pkl', 'rb')
-        #     strategy = pickle.load(strategy_file)
-        #     strategy_file.close()
-        #     self.strategy = strategy
-        # except FileNotFoundError as e:
-        #     sys.exit(e)
+
+    # Validation Script
+    def validate_strategy(self):
+        # Check tech ind
+        self.logger.info('Validating Strategy')
+        error = False
+        tester = Test()
+
+        price_map = tester.price_map()
+        new_price_map = {}
+        # Test add_tech_ind()
+        try:
+            result = self.strategy.add_tech_ind(price_map)
+            for key in result:
+                test = result[key]
+                o = test['open']
+                h = test['high']
+                l = test['low']
+                c = test['close']
+                v = test['volume']
+                new_price_map = result
+        except:
+            error = True
+            self.logger.error('add_tech_ind() not implemented correctly')
+
+        if new_price_map:
+            daily_data = tester.create_daily_data(new_price_map)
+        else:
+            self.logger.info('add_tech_ind() must be fixed before the rest of the functions are validated')
+            sys.exit(1)
+        # Test rank_stocks()
+        try:
+            result = self.strategy.rank_stocks(daily_data)
+
+        except Exception as e:
+            error = True
+            self.logger.error('rank_stocks() not implemented correctly')
+
+        # Test stocks_to_sell()
+        try:
+            result = self.strategy.stocks_to_sell(['AAPL'], daily_data)
+            if type(result) is not list:
+                raise Exception
+        except:
+            error = True
+            self.logger.error('stocks_to_sell() not implemented correctly')
+
+        # Test stocks_to_buy()
+        try:
+            result = self.strategy.stocks_to_buy(['AAPL'], daily_data)
+            if type(result) is not list:
+                raise Exception
+
+        except Exception as e:
+            error = True
+            self.logger.error('stocks_to_buy() not implemented correctly')
+
+        if error:
+            self.logger.info('Strategy does not conform to standards')
+            sys.exit(1)
+
+        self.logger.info('Strategy Validated')
+
 
     def set_historical_data(self):
         self.logger.info('Fetching Data...')
         universe_date = {}
-        universe_data = DataFetcher(self.universe, self.start_date, self.end_date).daily_data()
-        self.universe_data = universe_data
-        self.logger.info('Complete.')
+        start = datetime.strptime(self.start_date, '%Y-%m-%d')
+        end = datetime.strptime(self.end_date, '%Y-%m-%d')
+
+        days = (end - start).days
+
+        if days < 1000:
+            universe_data = DataFetcher(self.universe, self.start_date, self.end_date).daily_data()
+            self.universe_data = universe_data
+            self.logger.info('Complete.')
+        else:
+            self.logger.error('Start and end date must be less than 1000 days apart')
 
     def buy(self, symbol, entry_price, entry_time, allocated_funds):
         # buy the stock if we do not have it in our portfolio
@@ -216,7 +291,10 @@ class BTStats:
         '''
         diff_return = (self.pct_return - self.market_return_rate)
         s_d = statistics.stdev(self.bt.daily_returns)
-        sharpe = round(diff_return / s_d, 2)
+        if diff_return == 0 or s_d == 0:
+            sharpe = 0.0
+        else:
+            sharpe = round(diff_return / s_d, 2)
         return sharpe
 
 class PrintColors:
