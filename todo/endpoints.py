@@ -20,6 +20,8 @@ urlpatterns = [
   # update profile on first login
   url("^auth/firstlogin/$", FirstLoginAPI.as_view()),
   # Update the alpaca keys
-  url("^api/alpaca/$", AlpacaKeysAPI.as_view())
+  url("^alpaca/$", AlpacaKeysAPI.as_view()),
+  # Get request for alpaca key
+  url("^alpaca/(?P<user_id>\d+)$", AlpacaKeysAPI.as_view())
 
 ]

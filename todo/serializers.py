@@ -10,7 +10,7 @@ from .models import Todo, UserProfile, AlpacaAPIKeys
 class AlpacaKeysSerializer(serializers.ModelSerializer):
     class Meta:
         model = AlpacaAPIKeys
-        fields = ('user_id', 'key_id', 'secret_key')
+        fields = ('user', 'key_id', 'secret_key')
 
 class TodoSerializer(serializers.ModelSerializer):
     class Meta:
