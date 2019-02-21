@@ -10,4 +10,6 @@ django-fernet-fields
 twilio
 alpaca-trade-api
 numpy
-pandas
+pandas==0.23.3
+TA-Lib
+django-cors-headers

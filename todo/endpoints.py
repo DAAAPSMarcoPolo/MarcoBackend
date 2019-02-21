@@ -1,13 +1,15 @@
 from django.conf.urls import include, url
 from rest_framework import routers
 
-from .api import TodoViewSet, AdminRegistrationAPI, AddUserAPI, LoginAPI, FirstLoginAPI, LoginFactorAPI, AlpacaKeysAPI
+from .api import TodoViewSet, AdminRegistrationAPI, AddUserAPI, LoginAPI, FirstLoginAPI, LoginFactorAPI, AlpacaKeysAPI, UserManagementAPI, PictureAPI, UserSettingsAPI
 
 router = routers.DefaultRouter()
 router.register('todos', TodoViewSet, 'todos')
 
 urlpatterns = [
   url("^", include(router.urls)),
+  url("users/list/$", UserManagementAPI.as_view()),
+  url("user/settings/$", UserSettingsAPI.as_view()),
   url("^auth/adduser/$", AddUserAPI.as_view()),
   # TODO remove in production
   # register the admin initially
@@ -19,6 +21,11 @@ urlpatterns = [
   # update profile on first login
   url("^auth/firstlogin/$", FirstLoginAPI.as_view()),
   # Update the alpaca keys
-  url("^api/alpaca/$", AlpacaKeysAPI.as_view())
+  # Get the profile picture 
+  url("profilepicture/$", PictureAPI.as_view()),
+  url("^alpaca/$", AlpacaKeysAPI.as_view()),
+  # Get request for alpaca key
+  url("^alpaca/(?P<user_id>\d+)$", AlpacaKeysAPI.as_view())
+
 
 ]
