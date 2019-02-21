@@ -172,9 +172,15 @@ class FirstLoginAPI(generics.GenericAPIView):
 
 class PictureAPI(generics.GenericAPIView):
   def get(self, request): 
-    return Response(status=status.HTTP_200_OK)
+    try:
+      user = User.objects.get(username=request.data['username'])
+      profile = UserProfile.objects.get(user=request.data['user'])
+    except UserProfile.DoesNotExist or User.DoesNotExist:
+      print("user DNE")
+      return Response(status=status.HTTP_404_NOT_FOUND)
+    return Response(profile.avatar.url , status=status.HTTP_200_OK, content_type="image/jpeg")
+
   def put(self, request):
-    print("Hello")
     try:
       user = User.objects.get(username=request.data['username'])
       profile = UserProfile.objects.get(user=request.data['user'])
