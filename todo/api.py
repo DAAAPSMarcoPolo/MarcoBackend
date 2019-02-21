@@ -147,8 +147,8 @@ class LoginFactorAPI(generics.GenericAPIView):
             })
         else:
             return Response({
-                "message": "incorrect code"
-            })
+                "error": "incorrect code"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 class FirstLoginAPI(generics.GenericAPIView):
     serializer_class = FirstLoginSerializer
