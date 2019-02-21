@@ -15,11 +15,13 @@ from .utils.messages import Utils
 from django.contrib.auth.models import User
 
 import traceback
+import re
 from datetime import datetime
 from django.utils.crypto import get_random_string
 from django.conf import settings
 
 from twilio.rest import Client
+
 
 
 class TodoViewSet(viewsets.ModelViewSet):
@@ -56,7 +58,11 @@ class AddUserAPI(generics.GenericAPIView):
         username = request.data['username']
         password = request.data['password']
         # regex to check email
-
+        pattern = re.compile("^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$")
+        if not pattern.match(username):
+          return Response({
+            "error": "invalid email address"
+          }, status=status.HTTP_400_BAD_REQUEST)
         msg = "Username: " + username + "\nPassword: " + password
         Utils.send_email(self, message=msg, subject="MarcoPolo Login Credentials", recipients=[username])
         # TODO test
