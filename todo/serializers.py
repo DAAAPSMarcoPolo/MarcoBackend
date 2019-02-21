@@ -106,8 +106,4 @@ class UpdateAuthUserSerializer(serializers.Serializer):
 class UpdateProfileSerializer(serializers.Serializer):
   class Meta:
     model = UserProfile
-    fields: ('firstlogin', 'avatar', 'phone_number')
-
-  
-    
-      
+    fields = ('firstlogin', 'avatar', 'phone_number')
