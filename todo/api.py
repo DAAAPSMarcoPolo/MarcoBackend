@@ -82,6 +82,7 @@ class AddUserAPI(generics.GenericAPIView):
             except Exception as e:
                 print("Twilio error:")
                 print(e)
+        # TODO change this, don't know why we sending token...
         return Response({
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
             "token": AuthToken.objects.create(user)
@@ -95,7 +96,6 @@ class LoginAPI(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data
         userData = UserSerializer(user, context=self.get_serializer_context()).data
-        # only send token if not firstlogin
         if userData['profile']['firstlogin']:
             return Response({
                 "message": "first login",
