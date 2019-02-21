@@ -218,7 +218,7 @@ class PictureAPI(generics.GenericAPIView):
     profile.avatar = request.data['avatar']
     user.save()
     profile.save()
-    return Response(status=status.HTTP_201_CREATED)
+    return Response(status=status.HTTP_200_OK)
 
 class UserSettingsAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
