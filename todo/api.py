@@ -227,7 +227,6 @@ class UserSettingsAPI(generics.GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            # HOW TO GET USER FROM TOKEN: user = User.objects.get(username=self.request.user.username)
             user = User.objects.select_related('profile') \
             .values('username', 'first_name', 'last_name', 'profile__phone_number') \
             .get(username=self.request.user.username)
@@ -244,6 +243,8 @@ class UserSettingsAPI(generics.GenericAPIView):
         user.first_name = request.data['first_name']
         user.last_name = request.data['last_name']
         profile.phone_number = request.data['phone_number']
+
+        # TODO save password
         
         user.save()
         profile.save()

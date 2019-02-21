@@ -1,112 +1,33 @@
-
-### /editProfile
-Receives:
+## User
+### **All of the below require authentication**
+#### GET /api/user/settings/
+Response:
+```json
 {
-email: "sdblatz@gmail.com"
-newEmail: "sblatz@purdue.edu" //optional
-newName: "Sawyer" //optional
+    "user": {
+        "username": "sean.becker15@gmail.com",
+        "first_name": "Sean",
+        "last_name": "Becker",
+        "profile__phone_number": "8479775375"
+    }
 }
-
-Sends:
-{
-sucess: "true"
-error: "Email does not exist." //optional
-}
-
-### /profile
-
-Receives:
-{
-email: "sdblatz@gmail.com"
-}
-
-Sends:
-{
-sucess: "true"
-name: "Sawyer"
-email: "sdblatz@gmail.com"
-password: "securePass"
-prefersEmailUpdates: "0"
-postCount: "3"
-}
-
-### /createAccount
-
-Receives:
-{
-email: "sdblatz@gmail.com",
-name: "Sawyer",
-email: "sdblatz@gmail.com",
-password: "securePass",
-phoneNumber: "2008657700",
-prefersEmailUpdates: "0"
-}
-
-Sends:
-{
-sucess: "true"
-error: "Email already exists." //optional
-}
-
-### /deleteAccount
-
-Receives:
-{
-email: "sdblatz@gmail.com"
-}
-
-Sends:
-{
-sucess: "true"
-error: "Email doesn't exist." //optional
-}
-
-### /changePassword
-
-Receives:
-{
-email: "sdblatz@gmail.com"
-password: "oldPassword"
-newPassword: "newPassword"
-}
-
-Sends:
-{
-sucess: "true"
-error: "Email doesn't exist." //optional
-}
-
-
-
-### /addpicture
-
-Receives:
-{
-    file: image ->(multipart/form-data)
-    email: "luna.ad2@gmail.com"
-}
-
+```
+#### PUT /api/user/settings/
 Send:
-
+```json
 {
-
-    success: "true",
-
-    error: "success: false"
-
+  username: "sean.becker15@gmail.com",
+  first_name: "Sean",
+  last_name: "Becker",
+  phone_number: "8479775375"
+  password: "password",
+  new_password: "new_password"
 }
-
-### /getPicture
-
-Receives:
-
+```
+Response (success):
+- status: 200
+```json
 {
-    'email': ''
+  "message": "updated profile."
 }
-
-Send:
-
-{
-    "success": "true"
-    error: "success: false"
-}
+```
