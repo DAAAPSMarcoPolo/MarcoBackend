@@ -244,7 +244,14 @@ class UserSettingsAPI(generics.GenericAPIView):
         profile.phone_number = request.data['phone_number']
 
         # TODO save password
-        
+        if 'new_password' in request.data:
+          password = request.data['password']
+          if not user.check_password(password):
+            return Response({ "message": "invalid password." })
+          new_password = request.data['new_password']
+          user.set_password(new_password)
+
+
         user.save()
         profile.save()
 
