@@ -1,7 +1,9 @@
 from django.conf.urls import include, url
 from rest_framework import routers
 
-from .api import AdminRegistrationAPI, AddUserAPI, LoginAPI, FirstLoginAPI, LoginFactorAPI, AlpacaKeysAPI, UserManagementAPI, PictureAPI, UserSettingsAPI
+from marco_polo.api.login import AdminRegistrationAPI, AddUserAPI, LoginAPI, FirstLoginAPI, LoginFactorAPI
+from marco_polo.api.user import UserManagementAPI, PictureAPI, UserSettingsAPI
+from marco_polo.api.api_keys import AlpacaKeysAPI
 
 router = routers.DefaultRouter()
 
