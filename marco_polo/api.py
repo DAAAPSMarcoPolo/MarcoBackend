@@ -123,7 +123,6 @@ class LoginFactorAPI(generics.GenericAPIView):
     """
       Check if code for given user is correct and respond with token
     """
-
     def post(self, request, *args, **kwargs):
         try:
             user = User.objects.get(username=request.data['username'])
@@ -308,14 +307,9 @@ class UserManagementAPI(generics.GenericAPIView):
 class AlpacaKeysAPI(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         """ Add an Alpaca key pair """
-        try:
-            print(request.data)
-            user = User.objects.get(id=request.data['user'])
-        except User.DoesNotExist:
-            print("user DNE")
 
         try:
-            api_key, created = AlpacaAPIKeys.objects.get_or_create(user_id=request.data['user'])
+            api_key, created = AlpacaAPIKeys.objects.get_or_create(id=1)
             api_key.key_id = request.data['key_id']
             api_key.secret_key = request.data['secret_key']
             api_key.save()
@@ -329,7 +323,7 @@ class AlpacaKeysAPI(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         """ Update an Alpaca key pair """
         try:
-            ApiKey = AlpacaAPIKeys.objects.get(user_id=kwargs['user_id'])
+            ApiKey = AlpacaAPIKeys.objects.get(id=1)
         except AlpacaAPIKeys.DoesNotExist:
             print("API Key not found")
             return Response("No API key associated with given user", status=status.HTTP_400_BAD_REQUEST)

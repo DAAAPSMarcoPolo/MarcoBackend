@@ -17,8 +17,8 @@ class UserProfile(models.Model):
     avatar = models.ImageField(upload_to='uploads/', blank=True, null=True)
 
 
-class AlpacaAPIKeys(models.Model): 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+class AlpacaAPIKeys(models.Model):
+    id = models.IntegerField(primary_key=True)
     key_id = EncryptedTextField(max_length=None)
     secret_key = EncryptedTextField(max_length=120)
 
