@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('auth', '0009_alter_user_last_name_max_length'),
-        ('todo', '0008_auto_20190213_1826'),
+        ('marco_polo', '0008_auto_20190213_1826'),
     ]
 
     operations = [

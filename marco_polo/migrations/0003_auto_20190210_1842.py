@@ -3,14 +3,14 @@
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import todo.models
+import marco_polo.models
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('todo', '0002_useravatar'),
+        ('marco_polo', '0002_useravatar'),
     ]
 
     operations = [
@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('firstlogin', models.BooleanField(default=False)),
                 ('code', models.CharField(max_length=6)),
                 ('code_created', models.DateField()),
-                ('avatar', models.ImageField(blank=True, null=True, upload_to=todo.models.get_image_path)),
+                ('avatar', models.ImageField(blank=True, null=True, upload_to=marco_polo.models.get_image_path)),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
