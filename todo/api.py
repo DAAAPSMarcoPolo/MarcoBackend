@@ -258,8 +258,21 @@ class UserSettingsAPI(generics.GenericAPIView):
         return Response({ "message": "updated profile." })
 
 class UserManagementAPI(generics.GenericAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser)
+  authentication_classes = (TokenAuthentication,)
+  permission_classes = (permissions.IsAuthenticated,permissions.IsAdminUser)
+
+  # send list of current users
+  def get(self, request, *args, **kwargs):
+    users = User.objects.values('username')
+    return Response({"users": users})
+
+  def delete(self, request, *args, **kwargs):
+    # deactivate user
+    username = request.data['username']
+    print(username)
+    user = User.objects.get(username=username)
+    user.is_active = False
+    user.save()
 
     # send list of current users
     def get(self, request, *args, **kwargs):
