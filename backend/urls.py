@@ -15,13 +15,11 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
-
-from rest_framework import routers
-from todo import endpoints
+from marco_polo import endpoints
 
 
 urlpatterns = [
     url(r'^api/', include(endpoints)),
     url(r'^api/auth', include('knox.urls')),
-    url(r'^admin/', admin.site.urls),
+    #url(r'^admin/', admin.site.urls),
 ]

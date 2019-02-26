@@ -7,7 +7,7 @@ import fernet_fields.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('todo', '0011_auto_20190220_2249'),
+        ('marco_polo', '0011_auto_20190220_2249'),
     ]
 
     operations = [
