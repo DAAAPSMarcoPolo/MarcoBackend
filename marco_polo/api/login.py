@@ -1,38 +1,21 @@
-from rest_framework import viewsets, permissions, generics
+from rest_framework import permissions, generics
 from rest_framework.response import Response
-from django.http import JsonResponse
 from rest_framework import status
-
 from knox.models import AuthToken
 from knox.auth import TokenAuthentication
-
-from .models import Todo, UserProfile, AlpacaAPIKeys
-from .serializers import TodoSerializer, CreateUserSerializer, UserSerializer, LoginUserSerializer, \
+from marco_polo.models import UserProfile, AlpacaAPIKeys
+from marco_polo.serializers import CreateUserSerializer, UserSerializer, LoginUserSerializer, \
     FirstLoginSerializer, UserProfileSerializer, ExtUserProfileSerializer, AlpacaKeysSerializer, UpdateAuthUserSerializer
-
-from .utils.messages import Utils
-
+from marco_polo.utils.messages import Utils
 from django.contrib.auth.models import User
-
 import traceback
 import re
 from datetime import datetime
 from django.utils.crypto import get_random_string
 from django.conf import settings
-
 from twilio.rest import Client
 
 
-
-class TodoViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, ]
-    serializer_class = TodoSerializer
-
-    def get_queryset(self):
-        return self.request.user.todos.all()
-
-
-# TODO remove in production
 class AdminRegistrationAPI(generics.GenericAPIView):
     serializer_class = CreateUserSerializer
 
@@ -44,6 +27,7 @@ class AdminRegistrationAPI(generics.GenericAPIView):
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
             "token": AuthToken.objects.create(user)
         })
+
 
 class AddUserAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
@@ -64,7 +48,7 @@ class AddUserAPI(generics.GenericAPIView):
             "error": "invalid email address"
           }, status=status.HTTP_400_BAD_REQUEST)
         msg = "Username: " + username + "\nPassword: " + password
-        Utils.send_email(self, message=msg, subject="MarcoPolo Login Credentials", recipients=[username])
+        Utils.send_email(self, message=msg, subject="marco_polo Login Credentials", recipients=[username])
         # TODO test
         # send out text
         users = User.objects.filter(is_active=True).select_related('profile').values('username',
@@ -72,7 +56,7 @@ class AddUserAPI(generics.GenericAPIView):
         for u in users:
             print(u)
             client = Client(settings.TWILIO_ACC_SID, settings.TWILIO_AUTH_TOKEN)
-            body = username + " has been added to MarcoPolo 🤗😎"
+            body = username + " has been added to marco_polo 🤗😎"
             try:
                 client.messages.create(
                     body=body,
@@ -88,6 +72,7 @@ class AddUserAPI(generics.GenericAPIView):
             "token": AuthToken.objects.create(user)
         })
 
+
 class LoginAPI(generics.GenericAPIView):
     serializer_class = LoginUserSerializer
 
@@ -96,6 +81,7 @@ class LoginAPI(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data
         userData = UserSerializer(user, context=self.get_serializer_context()).data
+        print(userData)
         if userData['profile']['firstlogin']:
             return Response({
                 "message": "first login",
@@ -116,7 +102,7 @@ class LoginAPI(generics.GenericAPIView):
                 traceback.print_exc()
             # send text
             client = Client(settings.TWILIO_ACC_SID, settings.TWILIO_AUTH_TOKEN)
-            body = "Your MarcoPolo 2-factor code is: " + code
+            body = "Your marco_polo 2-factor code is: " + code
             message = client.messages.create(
                 body=body,
                 from_='8475586630',
@@ -126,11 +112,11 @@ class LoginAPI(generics.GenericAPIView):
                 "message": "code sent"
             })
 
+
 class LoginFactorAPI(generics.GenericAPIView):
     """
       Check if code for given user is correct and respond with token
     """
-
     def post(self, request, *args, **kwargs):
         try:
             user = User.objects.get(username=request.data['username'])
@@ -159,6 +145,7 @@ class LoginFactorAPI(generics.GenericAPIView):
             return Response({
                 "error": "incorrect code"
             }, status=status.HTTP_400_BAD_REQUEST)
+
 
 class FirstLoginAPI(generics.GenericAPIView):
     serializer_class = FirstLoginSerializer
@@ -195,147 +182,3 @@ class FirstLoginAPI(generics.GenericAPIView):
         return Response({
             "message": "profile updated."
         })
-
-class PictureAPI(generics.GenericAPIView):
-  authentication_classes = (TokenAuthentication,)
-  permission_classes = (permissions.IsAuthenticated,)
-  def get(self, request): 
-    try:
-      user = User.objects.get(username=self.request.user.username)
-      profile = UserProfile.objects.get(user=user)
-    except UserProfile.DoesNotExist or User.DoesNotExist:
-      print("user DNE")
-      return Response(status=status.HTTP_404_NOT_FOUND)
-    return Response(profile.avatar.url , status=status.HTTP_200_OK)
-
-  def put(self, request):
-    try:
-      user = User.objects.get(username=self.request.user.username)
-      profile = UserProfile.objects.get(user=user)
-    except UserProfile.DoesNotExist or User.DoesNotExist:
-      print("user DNE")
-      return Response(status=status.HTTP_404_NOT_FOUND)
-    profile.avatar = request.data['avatar']
-    user.save()
-    profile.save()
-    return Response(status=status.HTTP_200_OK)
-
-class UserSettingsAPI(generics.GenericAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def get(self, request, *args, **kwargs):
-        try:
-            user = User.objects.select_related('profile') \
-            .values('username', 'first_name', 'last_name', 'profile__phone_number') \
-            .get(username=self.request.user.username)
-        except User.DoesNotExist:
-            print("user DNE")
-            return Response({"message": "could not find user."})
-        return Response({ "user": user })
-    
-    def put(self, request, *args, **kwargs):
-        user = User.objects.get(username=self.request.user.username)
-        profile = UserProfile.objects.get(user=user)
-        
-        user.username = request.data['username']
-        user.first_name = request.data['first_name']
-        user.last_name = request.data['last_name']
-        profile.phone_number = request.data['phone_number']
-
-        # TODO save password
-        if 'new_password' in request.data:
-          password = request.data['password']
-          if not user.check_password(password):
-            return Response({ "message": "invalid password." })
-          new_password = request.data['new_password']
-          user.set_password(new_password)
-
-
-        user.save()
-        profile.save()
-
-        return Response({ "message": "updated profile." })
-
-class UserManagementAPI(generics.GenericAPIView):
-  authentication_classes = (TokenAuthentication,)
-  permission_classes = (permissions.IsAuthenticated,permissions.IsAdminUser)
-
-  # send list of current users
-  def get(self, request, *args, **kwargs):
-    users = User.objects.values('username')
-    return Response({"users": users})
-
-  def delete(self, request, *args, **kwargs):
-    # deactivate user
-    username = request.data['username']
-    print(username)
-    user = User.objects.get(username=username)
-    user.is_active = False
-    user.save()
-
-    # send list of current users
-    def get(self, request, *args, **kwargs):
-        users = User.objects.values('username', 'is_active')
-        print(users)
-        return Response({"users": users})
-
-    def delete(self, request, *args, **kwargs):
-        # deactivate user
-        username = request.data['username']
-        print(username)
-        user = User.objects.get(username=username)
-        user.is_active = False
-        user.save()
-
-        # send out text
-        users = User.objects.filter(is_active=True).select_related('profile').values('username',
-                                                                                     'profile__phone_number')
-        for u in users:
-            print(u)
-            client = Client(settings.TWILIO_ACC_SID, settings.TWILIO_AUTH_TOKEN)
-            body = username + " has been removed from MarcoPolo 😩✌️"
-            try:
-                client.messages.create(
-                    body=body,
-                    from_='8475586630',
-                    to=u['profile__phone_number']
-                )
-            except Exception as e:
-                print("Twilio error:")
-                print(e)
-
-        return Response({"message": "user deleted."})
-
-class AlpacaKeysAPI(generics.GenericAPIView):
-    def post(self, request, *args, **kwargs):
-        """ Add an Alpaca key pair """
-        try:
-            print(request.data)
-            user = User.objects.get(id=request.data['user'])
-        except User.DoesNotExist:
-            print("user DNE")
-
-        try:
-            api_key, created = AlpacaAPIKeys.objects.get_or_create(user_id=request.data['user'])
-            api_key.key_id = request.data['key_id']
-            api_key.secret_key = request.data['secret_key']
-            api_key.save()
-            print("Successfully updated/created")
-        except Exception as e:
-            print(e)
-            return Response("Could not update/create Alpaca API key", status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(request.data, status=status.HTTP_201_CREATED)
-
-    def get(self, request, *args, **kwargs):
-        """ Update an Alpaca key pair """
-        try:
-            ApiKey = AlpacaAPIKeys.objects.get(user_id=kwargs['user_id'])
-        except AlpacaAPIKeys.DoesNotExist:
-            print("API Key not found")
-            return Response("No API key associated with given user", status=status.HTTP_400_BAD_REQUEST)
-
-        response = AlpacaKeysSerializer(ApiKey, context=self.get_serializer_context()).data
-
-        return Response(response)

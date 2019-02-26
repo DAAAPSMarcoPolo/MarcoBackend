@@ -3,19 +3,14 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.utils.crypto import get_random_string
 from fernet_fields import EncryptedTextField
+from .models import UserProfile, AlpacaAPIKeys
 
-
-from .models import Todo, UserProfile, AlpacaAPIKeys
 
 class AlpacaKeysSerializer(serializers.ModelSerializer):
     class Meta:
         model = AlpacaAPIKeys
-        fields = ('user', 'key_id', 'secret_key')
+        fields = ('id', 'key_id', 'secret_key')
 
-class TodoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Todo
-        fields = ('id', 'title', 'description', 'completed')
 
 class CreateUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,10 +27,12 @@ class CreateUserSerializer(serializers.ModelSerializer):
         UserProfile.objects.create(user=user,code=code)
         return user
 
+
 class ExtUserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = '__all__'
+
 
 class UserProfileSerializer(serializers.ModelSerializer):
     new_password = serializers.CharField(required=False)
@@ -43,6 +40,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         exclude = ('code', 'code_created')
+
 
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(required=True)
@@ -62,6 +60,7 @@ class LoginUserSerializer(serializers.Serializer):
             return user
         raise serializers.ValidationError("Unable to log in with provided credentials.")
 
+
 class FirstLoginSerializer(serializers.Serializer):
     # fields that must be updated on first login
     username = serializers.CharField(allow_blank=False)
@@ -76,6 +75,7 @@ class FirstLoginSerializer(serializers.Serializer):
         if user and user.is_active:
             return user
         raise serializers.ValidationError("Unable to log in with provided credentials.")
+
 
 class UpdateAuthUserSerializer(serializers.Serializer):
   first_name = serializers.CharField()
@@ -102,6 +102,7 @@ class UpdateAuthUserSerializer(serializers.Serializer):
       instance.set_password(new_pass)
     instance.save()
     return instance
+
 
 class UpdateProfileSerializer(serializers.Serializer):
   class Meta:

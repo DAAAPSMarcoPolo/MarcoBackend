@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('todo', '0009_alpacaapikeys'),
+        ('marco_polo', '0009_alpacaapikeys'),
     ]
 
     operations = [

@@ -7,6 +7,7 @@ import os
 def get_image_path(instance, filename):
     return os.path.join('photos', str(instance.id), filename)
 
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', primary_key=True)
     firstlogin = models.BooleanField(default=True)
@@ -15,17 +16,10 @@ class UserProfile(models.Model):
     code_created = models.DateTimeField(null=True)
     avatar = models.ImageField(upload_to='uploads/', blank=True, null=True)
 
-class AlpacaAPIKeys(models.Model): 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+
+class AlpacaAPIKeys(models.Model):
+    id = models.IntegerField(primary_key=True)
     key_id = EncryptedTextField(max_length=None)
     secret_key = EncryptedTextField(max_length=120)
-
-class Todo(models.Model):
-    title = models.CharField(max_length=120)
-    description = models.TextField()
-    completed = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.title
 
 
