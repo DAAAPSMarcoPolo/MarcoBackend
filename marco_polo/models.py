@@ -24,7 +24,7 @@ class AlpacaAPIKeys(models.Model):
 
 
 class Strategy(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User)
     strategy_file = models.BinaryField()
     approved = models.BooleanField(default=False)
@@ -33,14 +33,14 @@ class Strategy(models.Model):
 
 
 class StrategyVote(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     strategy = models.ForeignKey(Strategy)
     user = models.ForeignKey(User)
     vote = models.BooleanField(default=False)
 
 
 class Universe(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User)
     updated = models.DateTimeField(auto_now_add=True, blank=True)
 
@@ -52,7 +52,7 @@ class StockInUniverse(models.Model):
 
 
 class UsedUniverse(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User)
     updated = models.DateTimeField(auto_now_add=True, blank=True)
 
@@ -64,7 +64,7 @@ class UsedUniverseStocks(models.Model):
 
 
 class Backtest(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     strategy = models.ForeignKey(Strategy)
     universe = models.OneToOneField(UsedUniverse, on_delete=models.CASCADE, related_name='universe')
     user = models.ForeignKey(User)
@@ -78,7 +78,7 @@ class Backtest(models.Model):
 
 
 class BacktestTrade(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     backtest = models.ForeignKey(Backtest)
     symbol = models.CharField(max_length=6, null=False)
     buy_time = models.DateTimeField(auto_now_add=True, blank=True)
