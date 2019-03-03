@@ -23,3 +23,72 @@ class AlpacaAPIKeys(models.Model):
     secret_key = EncryptedTextField(max_length=120)
 
 
+class Strategy(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    strategy_file = models.BinaryField()
+    approved = models.BooleanField(default=False)
+    live = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True)
+
+
+class StrategyVote(models.Model):
+    id = models.AutoField(primary_key=True)
+    strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    vote = models.BooleanField(default=False)
+
+
+class Universe(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    updated = models.DateTimeField(auto_now_add=True, blank=True)
+
+
+class StockInUniverse(models.Model):
+    id = models.AutoField(primary_key=True)
+    universe = models.ForeignKey(Universe, on_delete=models.CASCADE)
+    symbol = models.CharField(max_length=6)
+
+
+class UsedUniverse(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    updated = models.DateTimeField(auto_now_add=True, blank=True)
+
+
+class StockInUsedUniverse(models.Model):
+    id = models.AutoField(primary_key=True)
+    used_universe = models.ForeignKey(UsedUniverse, on_delete=models.CASCADE)
+    symbol = models.CharField(max_length=6)
+
+
+class Backtest(models.Model):
+    id = models.AutoField(primary_key=True)
+    strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
+    universe = models.OneToOneField(UsedUniverse, on_delete=models.CASCADE, related_name='universe')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    complete = models.BooleanField(default=False)
+    start_date = models.DateTimeField(null=False)
+    end_date = models.DateTimeField(null=False)
+    initial_cash = models.FloatField(null=False)
+    end_cash = models.FloatField(default=initial_cash, null=False)
+    sharpe = models.FloatField(null=False)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True)
+
+
+class BacktestTrade(models.Model):
+    id = models.AutoField(primary_key=True)
+    backtest = models.ForeignKey(Backtest, on_delete=models.CASCADE)
+    symbol = models.CharField(max_length=6, null=False)
+    buy_time = models.DateTimeField(auto_now_add=True, blank=True)
+    sell_time = models.DateTimeField(auto_now_add=True, blank=True)
+    buy_price = models.FloatField(null=False)
+    sell_price = models.FloatField(null=False)
+    qty = models.IntegerField(null=False)
+
+
+
+
+
+

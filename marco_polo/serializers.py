@@ -3,13 +3,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.utils.crypto import get_random_string
 from fernet_fields import EncryptedTextField
-from .models import UserProfile, AlpacaAPIKeys
+from .models import UserProfile, AlpacaAPIKeys, Strategy, StrategyVote, Universe, StockInUniverse, UsedUniverse, \
+    StockInUsedUniverse, Backtest, BacktestTrade
 
-
-class AlpacaKeysSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AlpacaAPIKeys
-        fields = ('id', 'key_id', 'secret_key')
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
@@ -108,3 +104,57 @@ class UpdateProfileSerializer(serializers.Serializer):
   class Meta:
     model = UserProfile
     fields = ('firstlogin', 'avatar', 'phone_number')
+
+
+class AlpacaKeysSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AlpacaAPIKeys
+        fields = '__all__'
+
+
+class StrategySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Strategy
+        fields = '__all__'
+
+
+class StrategyVoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StrategyVote
+        fields = '__all__'
+
+
+class UniverseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Universe
+        fields = '__all__'
+
+
+class StockInUniverseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StockInUniverse
+        fields = '__all__'
+
+
+class UsedUniverseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UsedUniverse
+        fields = '__all__'
+
+
+class StockInUsedUniverseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StockInUsedUniverse
+        fields = '__all__'
+
+
+class BacktestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Backtest
+        fields = '__all__'
+
+
+class BacktestTradeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BacktestTrade
+        fields = '__all__'
