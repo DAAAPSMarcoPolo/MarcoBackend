@@ -4,6 +4,7 @@ from rest_framework import routers
 from marco_polo.api.login import AdminRegistrationAPI, AddUserAPI, LoginAPI, FirstLoginAPI, LoginFactorAPI
 from marco_polo.api.user import UserManagementAPI, PictureAPI, UserSettingsAPI
 from marco_polo.api.api_keys import AlpacaKeysAPI
+from marco_polo.api.strategy import AlgorithmAPI
 
 router = routers.DefaultRouter()
 
@@ -22,11 +23,11 @@ urlpatterns = [
   # update profile on first login
   url("^auth/firstlogin/$", FirstLoginAPI.as_view()),
   # Get the profile picture
-  url("profilepicture/$", PictureAPI.as_view()),
+  url("^profilepicture/$", PictureAPI.as_view()),
   # Update the alpaca keys
-  url("^alpaca/$", AlpacaKeysAPI.as_view()),
-  # Get request for alpaca key
-  url("^alpaca/$", AlpacaKeysAPI.as_view())
+  url("^alpaca/$", AlpacaKeysAPI.as_view()), 
+  # Manage strategy python files 
+   url("^algofile/$", AlgorithmAPI.as_view())
 
 
 ]
