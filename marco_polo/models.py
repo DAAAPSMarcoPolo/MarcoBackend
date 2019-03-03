@@ -57,7 +57,7 @@ class UsedUniverse(models.Model):
     updated = models.DateTimeField(auto_now_add=True, blank=True)
 
 
-class UsedUniverseStocks(models.Model):
+class StockInUsedUniverse(models.Model):
     id = models.AutoField(primary_key=True)
     used_universe = models.ForeignKey(UsedUniverse, on_delete=models.CASCADE)
     symbol = models.CharField(max_length=6)
