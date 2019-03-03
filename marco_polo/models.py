@@ -35,7 +35,7 @@ class Strategy(models.Model):
 class StrategyVote(models.Model):
     id = models.AutoField(primary_key=True)
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     vote = models.BooleanField(default=False)
 
 
