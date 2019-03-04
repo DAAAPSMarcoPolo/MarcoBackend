@@ -26,7 +26,7 @@ class AlpacaAPIKeys(models.Model):
 class Strategy(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    strategy_file = models.BinaryField()
+    strategy_file = models.FileField(upload_to='uploads/algos/', blank=True, null=True)
     approved = models.BooleanField(default=False)
     live = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
