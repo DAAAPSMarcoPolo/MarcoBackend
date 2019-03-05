@@ -28,7 +28,7 @@ Response (failure, invalid credentials):
 ```json
 {
   non_field_errors: [
-    'Unable to log in with provided credentials.',
+    "Unable to log in with provided credentials.",
   ]
 }
 ```
