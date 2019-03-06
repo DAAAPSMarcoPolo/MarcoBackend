@@ -5,6 +5,7 @@ from marco_polo.api.login import AdminRegistrationAPI, AddUserAPI, LoginAPI, Fir
 from marco_polo.api.user import UserManagementAPI, PictureAPI, UserSettingsAPI
 from marco_polo.api.api_keys import AlpacaKeysAPI
 from marco_polo.api.strategy import AlgorithmAPI
+from marco_polo.api.universe import UniverseAPI
 
 router = routers.DefaultRouter()
 
@@ -27,7 +28,9 @@ urlpatterns = [
   # Update the alpaca keys
   url("^alpaca/$", AlpacaKeysAPI.as_view()), 
   # Manage strategy python files 
-   url("^algofile/$", AlgorithmAPI.as_view())
+  url("^algofile/$", AlgorithmAPI.as_view()),
+  # Manage universes
+  url("^universe/$", UniverseAPI.as_view())
 
 
 ]

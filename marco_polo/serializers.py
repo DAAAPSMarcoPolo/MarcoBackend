@@ -125,6 +125,7 @@ class StrategyVoteSerializer(serializers.ModelSerializer):
 
 
 class UniverseSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Universe
         fields = '__all__'

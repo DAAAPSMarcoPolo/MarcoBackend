@@ -10,6 +10,7 @@ from knox.auth import TokenAuthentication
 class AlgorithmAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
+
     def post(self, request):
         try:
             user = User.objects.get(username=self.request.user.username)
