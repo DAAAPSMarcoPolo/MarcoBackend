@@ -9,8 +9,8 @@ from twilio.rest import Client
 
 
 class PictureAPI(generics.GenericAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
+    #authentication_classes = (TokenAuthentication,)
+    #permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
         try:
@@ -77,7 +77,7 @@ class UserManagementAPI(generics.GenericAPIView):
 
     # send list of current users
     def get(self, request, *args, **kwargs):
-        users = User.objects.values('username')
+        users = User.objects.values('username', 'is_active', 'is_staff')
         return Response({"users": users})
 
     def delete(self, request, *args, **kwargs):
@@ -88,35 +88,22 @@ class UserManagementAPI(generics.GenericAPIView):
         user.is_active = False
         user.save()
 
-        # send list of current users
-        def get(self, request, *args, **kwargs):
-            users = User.objects.values('username', 'is_active')
-            print(users)
-            return Response({"users": users})
+        # send out text
+        users = User.objects.filter(is_active=True).select_related('profile').values('username',
+                                                                                     'profile__phone_number')
+        for u in users:
+            print(u)
+            client = Client(settings.TWILIO_ACC_SID,
+                            settings.TWILIO_AUTH_TOKEN)
+            body = username + " has been removed from marco_polo 😩✌️"
+            try:
+                client.messages.create(
+                    body=body,
+                    from_='8475586630',
+                    to=u['profile__phone_number']
+                )
+            except Exception as e:
+                print("Twilio error:")
+                print(e)
 
-        def delete(self, request, *args, **kwargs):
-            # deactivate user
-            username = request.data['username']
-            print(username)
-            user = User.objects.get(username=username)
-            user.is_active = False
-            user.save()
-
-            # send out text
-            users = User.objects.filter(is_active=True).select_related('profile').values('username',
-                                                                                         'profile__phone_number')
-            for u in users:
-                print(u)
-                client = Client(settings.TWILIO_ACC_SID, settings.TWILIO_AUTH_TOKEN)
-                body = username + " has been removed from marco_polo 😩✌️"
-                try:
-                    client.messages.create(
-                        body=body,
-                        from_='8475586630',
-                        to=u['profile__phone_number']
-                    )
-                except Exception as e:
-                    print("Twilio error:")
-                    print(e)
-
-            return Response({"message": "user deleted."})
+        return Response({"message": "user deleted."})
