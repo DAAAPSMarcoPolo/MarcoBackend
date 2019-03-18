@@ -2,8 +2,8 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework import status
 from django.core import serializers
-from marco_polo.models import Universe, StockInUniverse
-from marco_polo.serializers import UniverseSerializer, StockInUniverseSerializer
+from marco_polo.models import Universe, Stock
+from marco_polo.serializers import UniverseSerializer, Stock
 from knox.auth import TokenAuthentication
 
 
@@ -24,23 +24,41 @@ class UniverseAPI(generics.GenericAPIView):
             print(e)
             return Response("Could not create new universe", status=status.HTTP_400_BAD_REQUEST)
 
-        stocks = []
-        for symbol in request.data["universe"]:
-            print(symbol)
-            data = {'symbol': symbol,
-                    'universe_id': universe_id}
-            stock = StockInUniverse.objects.create(symbol=symbol, universe_id=universe_id)
-            stocks.append(stock)
-
-        [stock.save() for stock in stocks]
-        stocks = [stock.symbol for stock in stocks]
+        stock_list = request.data["universe"]
+        universe.stocks.add(*stock_list)
         universe = Universe.objects.get(id=universe_id)
         result_universe = UniverseSerializer(universe, context=self.get_serializer_context()).data
-        result_universe['stocks'] = stocks
 
         return Response(result_universe, status=status.HTTP_201_CREATED)
 
     def get(self, request, *args, **kwargs):
         """ Get a stock universe """
         # TODO
-        return Response(request.data, status=status.HTTP_200_OK)
+        try:
+            id = self.kwargs['id']
+            universe = Universe.objects.get(id=id)
+            print(universe)
+            response = UniverseSerializer(universe, context=self.get_serializer_context()).data
+
+            return Response(response, status=status.HTTP_200_OK)
+
+        except:
+            print('no matching universe found')
+            return Response('No universe with this ID was found', status=status.HTTP_200_OK)
+
+    def put(self, request, *args, **kwargs):
+
+        try:
+            id = self.kwargs['id']
+            universe = Universe.objects.get(id=id)
+            stock_list = request.data["universe"]
+            universe.stocks.clear()
+            universe.stocks.add(*stock_list)
+            response = UniverseSerializer(universe, context=self.get_serializer_context()).data
+
+            return Response(response, status=status.HTTP_200_OK)
+
+        except:
+            print('no matching universe found')
+            return Response('No universe with this ID was found', status=status.HTTP_200_OK)
+

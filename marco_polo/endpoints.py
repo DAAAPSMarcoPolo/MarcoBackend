@@ -6,6 +6,7 @@ from marco_polo.api.user import UserManagementAPI, PictureAPI, UserSettingsAPI
 from marco_polo.api.api_keys import AlpacaKeysAPI
 from marco_polo.api.strategy import AlgorithmAPI
 from marco_polo.api.universe import UniverseAPI
+from marco_polo.api.alpaca import SeedAPI
 
 router = routers.DefaultRouter()
 
@@ -30,7 +31,10 @@ urlpatterns = [
   # Manage strategy python files 
   url("^algofile/$", AlgorithmAPI.as_view()),
   # Manage universes
-  url("^universe/$", UniverseAPI.as_view())
+  url("^universe/$", UniverseAPI.as_view()),
+  url("^universe/(?P<id>\d+)/$", UniverseAPI.as_view()),
+  # Only to seed the db with tradable stocks
+  url("^stockseed/$", SeedAPI.as_view())
 
 
 ]

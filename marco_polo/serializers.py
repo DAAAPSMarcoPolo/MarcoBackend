@@ -2,9 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.utils.crypto import get_random_string
-from fernet_fields import EncryptedTextField
-from .models import UserProfile, AlpacaAPIKeys, Strategy, StrategyVote, Universe, StockInUniverse, UsedUniverse, \
-    StockInUsedUniverse, Backtest, BacktestTrade
+from .models import UserProfile, AlpacaAPIKeys, Strategy, StrategyVote, Universe, UsedUniverse, Backtest, BacktestTrade, Stock
 
 
 
@@ -131,21 +129,9 @@ class UniverseSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class StockInUniverseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StockInUniverse
-        fields = '__all__'
-
-
 class UsedUniverseSerializer(serializers.ModelSerializer):
     class Meta:
         model = UsedUniverse
-        fields = '__all__'
-
-
-class StockInUsedUniverseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StockInUsedUniverse
         fields = '__all__'
 
 
@@ -158,4 +144,11 @@ class BacktestSerializer(serializers.ModelSerializer):
 class BacktestTradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = BacktestTrade
+        fields = '__all__'
+
+
+class Stock(serializers.ModelSerializer):
+
+    class Meta:
+        model = Stock
         fields = '__all__'
