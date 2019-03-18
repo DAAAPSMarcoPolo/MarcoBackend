@@ -10,10 +10,12 @@ from knox.auth import TokenAuthentication
 class AlgorithmAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
+
     def post(self, request):
         try:
             user = User.objects.get(username=self.request.user.username)
             strat = Strategy.objects.create(user=user)
+            print(request.data["strategy_file"])
             strat.strategy_file = request.data["strategy_file"]
             strat.save()
             return Response("Created Strategy", status=status.HTTP_200_OK)
