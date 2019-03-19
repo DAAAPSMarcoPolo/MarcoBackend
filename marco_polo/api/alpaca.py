@@ -2,8 +2,8 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework import status
 from django.core import serializers
-from marco_polo.models import Stock, AlpacaAPIKeys
-from marco_polo.serializers import UniverseSerializer, StockInUniverseSerializer
+from marco_polo.models import Stock, AlpacaAPIKeys, Universe
+from marco_polo.serializers import UniverseSerializer
 from knox.auth import TokenAuthentication
 import alpaca_trade_api as tradeapi
 
@@ -31,21 +31,3 @@ class SeedAPI(generics.GenericAPIView):
 
         [stock.save() for stock in stocks]
         return Response('created', status=status.HTTP_201_CREATED)
-
-    def get(self, request, *args, **kwargs):
-        """ Get a stock universe """
-        # TODO
-        try:
-            id = self.kwargs['id']
-            universe = Universe.objects.get(id=id)
-            print(universe)
-            universe_serializer = serializers.serialize('json', [ universe, ])
-            return Response(universe_serializer, status=status.HTTP_200_OK)
-
-        except:
-            queryset = Universe.objects.prefetch_related('stocks')
-            for o in queryset:
-                for stock in o.stocks:
-                    print(stock)
-
-            return Response({"universes": queryset}, status=status.HTTP_200_OK)

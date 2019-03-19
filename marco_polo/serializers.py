@@ -147,7 +147,7 @@ class BacktestTradeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class Stock(serializers.ModelSerializer):
+class StockSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Stock
