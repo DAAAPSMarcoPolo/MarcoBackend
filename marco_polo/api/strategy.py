@@ -24,3 +24,15 @@ class AlgorithmAPI(generics.GenericAPIView):
         except Exception as e:
             print(e)
             return Response("Could not create new strategy", status=status.HTTP_400_BAD_REQUEST)
+
+class StrategyAPI(generics.GenericAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        try:
+            all_strats = Strategy.objects.all().values('id', 'name', 'description', 'user', 'created_at', 'approved')
+            return Response(all_strats, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            return Response("Could not get all of the algos", status=status.HTTP_400_BAD_REQUEST)
