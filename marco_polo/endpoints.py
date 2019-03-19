@@ -4,7 +4,7 @@ from rest_framework import routers
 from marco_polo.api.login import AdminRegistrationAPI, AddUserAPI, LoginAPI, FirstLoginAPI, LoginFactorAPI
 from marco_polo.api.user import UserManagementAPI, PictureAPI, UserSettingsAPI
 from marco_polo.api.api_keys import AlpacaKeysAPI
-from marco_polo.api.strategy import AlgorithmAPI
+from marco_polo.api.strategy import AlgorithmAPI, StrategyAPI
 from marco_polo.api.universe import UniverseAPI
 from marco_polo.api.alpaca import SeedAPI
 
@@ -34,7 +34,9 @@ urlpatterns = [
   url("^universe/$", UniverseAPI.as_view()),
   url("^universe/(?P<id>\d+)/$", UniverseAPI.as_view()),
   # Only to seed the db with tradable stocks
-  url("^stockseed/$", SeedAPI.as_view())
+  url("^stockseed/$", SeedAPI.as_view()),
+  # Get all algos 
+  url("^algos/$", StrategyAPI.as_view())
 
 
 ]
