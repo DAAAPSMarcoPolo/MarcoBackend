@@ -17,6 +17,8 @@ class AlgorithmAPI(generics.GenericAPIView):
             strat = Strategy.objects.create(user=user)
             print(request.data["strategy_file"])
             strat.strategy_file = request.data["strategy_file"]
+            strat.name = request.data["name"]
+            strat.description = request.data["description"]
             strat.save()
             return Response("Created Strategy", status=status.HTTP_200_OK)
         except Exception as e:
