@@ -11,18 +11,19 @@ import pickle
 import pyclbr
 
 
-from market_data import DataFetcher
-from defaultUniverses.sp500 import Universe
-from test_data import Test
+from marco_polo.backtesting.market_data import DataFetcher
+from marco_polo.backtesting.defaultUniverses.sp500 import Universe
+from marco_polo.backtesting.test_data import Test
 
 # from strategies.strategy_template import Strategy
+
 
 class Backtest:
 
     risk_free_return = .02
 
-    def __init__(self, strategy_name, initial_funds, universe, start_date, end_date):
-        self.strategy = strategy_name
+    def __init__(self, strategy, initial_funds, universe, start_date, end_date):
+        self.strategy = strategy
         self.initial_funds = float(initial_funds)
         self.current_funds = float(initial_funds)
         self.daily_returns = []
@@ -32,6 +33,7 @@ class Backtest:
         self.open_positions = {}
         self.trades = []
         self.universe_data = {}
+        self.running = True
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO)
 
@@ -232,6 +234,7 @@ class Backtest:
 
         self.universe_data = self.strategy.add_tech_ind(self.universe_data)
         result = self.simulate()
+        self.running = False
 
         return [True, 'Backtest was successfully ran ']
 
@@ -337,29 +340,29 @@ class PrintColors:
     UNDERLINE = '\033[4m'
 
 
-# Demo Backtests
-
-# Correct Strategy
-bt = Backtest('mean_reversion', 1000, Universe, '2018-1-1', '2019-2-13')
-bt.run()
-btStats = BTStats(bt)
-time.sleep(.1)
-
-print(PrintColors.OKGREEN)
-print("Initial Funds: ${}".format(round(bt.initial_funds, 2)))
-print("End Funds: ${}".format(round(bt.current_funds, 2)))
-print("Profit: ${}".format(btStats.realized_profit))
-print("% Return: {}%".format(round(btStats.pct_return*100,2)))
-print("Sharpe Ratio: {}".format(btStats.sharpe))
-print(PrintColors.ENDC)
-
-time.sleep(3)
-print("Now Demoing algorithm validation script...")
-
-# Strategy Val Test 1
-bt = Backtest('bad_strategy1', 1000, Universe, '2018-1-1', '2019-2-13')
-bt.run()
-
-# Strategy Val Test 2
-bt = Backtest('bad_strategy2', 1000, Universe, '2018-1-1', '2019-2-13')
-bt.run()
+# # Demo Backtests
+#
+# # Correct Strategy
+# bt = Backtest('mean_reversion', 1000, Universe, '2018-1-1', '2019-2-13')
+# bt.run()
+# btStats = BTStats(bt)
+# time.sleep(.1)
+#
+# print(PrintColors.OKGREEN)
+# print("Initial Funds: ${}".format(round(bt.initial_funds, 2)))
+# print("End Funds: ${}".format(round(bt.current_funds, 2)))
+# print("Profit: ${}".format(btStats.realized_profit))
+# print("% Return: {}%".format(round(btStats.pct_return*100,2)))
+# print("Sharpe Ratio: {}".format(btStats.sharpe))
+# print(PrintColors.ENDC)
+#
+# time.sleep(3)
+# print("Now Demoing algorithm validation script...")
+#
+# # Strategy Val Test 1
+# bt = Backtest('bad_strategy1', 1000, Universe, '2018-1-1', '2019-2-13')
+# bt.run()
+#
+# # Strategy Val Test 2
+# bt = Backtest('bad_strategy2', 1000, Universe, '2018-1-1', '2019-2-13')
+# bt.run()

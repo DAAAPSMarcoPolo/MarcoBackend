@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     'marco_polo',
     'rest_framework',
     'corsheaders',
-    'knox'
+    'knox',
 ]
 
 MIDDLEWARE = [

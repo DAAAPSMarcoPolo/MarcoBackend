@@ -19,7 +19,7 @@ class UniverseAPI(generics.GenericAPIView):
             universe = Universe.objects.create(user=user, name=universe_name)
             universe_id = universe.id
             universe.save()
-            print('created new universe')
+            print("created new universe")
         except Exception as e:
             print(e)
             return Response("Could not create new universe", status=status.HTTP_400_BAD_REQUEST)
@@ -35,21 +35,23 @@ class UniverseAPI(generics.GenericAPIView):
         """ Get a stock universe """
         # TODO
         try:
-            id = self.kwargs['id']
+            id = self.kwargs["id"]
             universe = Universe.objects.get(id=id)
             print(universe)
             response = UniverseSerializer(universe, context=self.get_serializer_context()).data
-
             return Response(response, status=status.HTTP_200_OK)
 
         except:
-            print('no matching universe found')
-            return Response('No universe with this ID was found', status=status.HTTP_200_OK)
+            print("no matching universe found")
+            universes = Universe.objects.all()
+            response = UniverseSerializer(universes, context=self.get_serializer_context(), many=True).data
+
+            return Response(response, status=status.HTTP_200_OK)
 
     def put(self, request, *args, **kwargs):
 
         try:
-            id = self.kwargs['id']
+            id = self.kwargs["id"]
             universe = Universe.objects.get(id=id)
             stock_list = request.data["universe"]
             universe.stocks.clear()
@@ -59,6 +61,5 @@ class UniverseAPI(generics.GenericAPIView):
             return Response(response, status=status.HTTP_200_OK)
 
         except:
-            print('no matching universe found')
-            return Response('No universe with this ID was found', status=status.HTTP_200_OK)
-
+            print("no matching universe found")
+            return Response("No universe with this ID was found", status=status.HTTP_200_OK)
