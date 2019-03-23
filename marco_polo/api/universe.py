@@ -42,7 +42,6 @@ class UniverseAPI(generics.GenericAPIView):
             return Response(response, status=status.HTTP_200_OK)
 
         except:
-            print("no matching universe found")
             universes = Universe.objects.all()
             response = UniverseSerializer(universes, context=self.get_serializer_context(), many=True).data
 
