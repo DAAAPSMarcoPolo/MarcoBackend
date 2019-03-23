@@ -2,6 +2,7 @@ from rest_framework import viewsets, permissions, generics
 from rest_framework.response import Response
 from rest_framework import status
 from marco_polo.models import Strategy
+from marco_polo.models import Backtest
 from marco_polo.serializers import StrategySerializer
 from django.contrib.auth.models import User
 from knox.auth import TokenAuthentication
@@ -25,13 +26,35 @@ class AlgorithmAPI(generics.GenericAPIView):
             print(e)
             return Response("Could not create new strategy", status=status.HTTP_400_BAD_REQUEST)
 
+
+# /algorithms/<algoID>
 class StrategyAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
+        # GET single algorithm details
+        if 'algoID' in kwargs:
+            try:
+                algoID = kwargs['algoID']
+                print(algoID)
+                algo = Strategy.objects.values(
+                    'name', 'description', 'user', 'created_at', 'approved').get(id=algoID)
+                backtest_list = Backtest.objects.filter(
+                    strategy=algoID)
+                data = {
+                    'algo_details': algo,
+                    'bt_list': backtest_list
+                }
+
+                return Response(data, status=status.HTTP_200_OK)
+            except Exception as e:
+                print(e)
+                return Response("Could not get the details for that algo", status=status.HTTP_400_BAD_REQUEST)
+        # GET list of algos
         try:
-            all_strats = Strategy.objects.all().values('id', 'name', 'description', 'user', 'created_at', 'approved')
+            all_strats = Strategy.objects.all().values(
+                'id', 'name', 'description', 'user', 'created_at', 'approved')
             return Response(all_strats, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
