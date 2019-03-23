@@ -31,7 +31,7 @@ class PictureAPI(generics.GenericAPIView):
         profile.avatar = request.data['avatar']
         user.save()
         profile.save()
-        return Response(status=status.HTTP_200_OK)
+        return Response(profile.avatar.url, status=status.HTTP_200_OK)
 
 
 class UserSettingsAPI(generics.GenericAPIView):
