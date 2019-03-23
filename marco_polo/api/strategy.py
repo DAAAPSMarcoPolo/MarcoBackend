@@ -55,6 +55,8 @@ class StrategyAPI(generics.GenericAPIView):
         try:
             all_strats = Strategy.objects.all().values(
                 'id', 'name', 'description', 'user', 'created_at', 'approved')
+            for strat in all_strats: 
+                print(strat)
             return Response(all_strats, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)

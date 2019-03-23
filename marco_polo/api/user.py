@@ -21,7 +21,7 @@ class PictureAPI(generics.GenericAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(profile.avatar.url, status=status.HTTP_200_OK)
 
-    def put(self, request):
+    def post(self, request):
         try:
             user = User.objects.get(username=self.request.user.username)
             profile = UserProfile.objects.get(user=user)
