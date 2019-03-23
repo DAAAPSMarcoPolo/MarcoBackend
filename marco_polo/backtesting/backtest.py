@@ -9,6 +9,9 @@ import pandas as pd
 import importlib
 import pickle
 import pyclbr
+import sys
+sys.path.append('.../..')
+sys.path.append('/Users/dpiotti/PycharmProjects/backendStorage/uploads')
 
 
 from marco_polo.backtesting.market_data import DataFetcher
@@ -39,11 +42,16 @@ class Backtest:
 
     def import_strategy(self):
         try:
-            strategy = importlib.import_module('strategies.' + self.strategy)
-            module_info = pyclbr.readmodule('strategies.' + self.strategy)
+            from os import listdir
+            from os.path import isfile, join
+            onlyfiles = [f for f in listdir('/Users/dpiotti/PycharmProjects/backendStorage/uploads') if isfile(join('/Users/dpiotti/PycharmProjects/backendStorage/uploads', f))]
+            print(onlyfiles)
+            strategy = importlib.import_module(package='../../backendStorage/uploads/algos/', name=self.strategy)
+            module_info = pyclbr.readmodule('../../backendStorage/uploads/algos/' + self.strategy)
 
             class_name = None
             for item in module_info.values():
+                print(item.name)
                 class_name = item.name
 
             self.strategy = getattr(strategy, class_name)()
