@@ -8,6 +8,8 @@ from marco_polo.api.strategy import AlgorithmAPI, StrategyAPI
 from marco_polo.api.universe import UniverseAPI
 from marco_polo.api.alpaca import SeedAPI
 from marco_polo.api.stock import StockAPI
+from marco_polo.api.backtest import BacktestAPI
+
 
 
 router = routers.DefaultRouter()
@@ -40,7 +42,8 @@ urlpatterns = [
   # Get all algos
   url("^algos/$", StrategyAPI.as_view()),
   # Get stocks
-  url("^stocks/$", StockAPI.as_view())
-
+  url("^stocks/$", StockAPI.as_view()),
+  # Run backtest
+  url("^backtest/$", BacktestAPI.as_view())
 
 ]
