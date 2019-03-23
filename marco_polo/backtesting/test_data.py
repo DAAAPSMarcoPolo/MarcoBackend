@@ -1,7 +1,8 @@
 import pandas as pd
 import pickle
+
 from datetime import datetime, timedelta
-from market_data import DataFetcher
+from marco_polo.backtesting.market_data import DataFetcher
 
 
 class Test:

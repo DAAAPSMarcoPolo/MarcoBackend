@@ -26,6 +26,8 @@ class AlpacaAPIKeys(models.Model):
 class Strategy(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.TextField(max_length=None, null=True)
+    description = models.TextField(max_length=None, null=True)
     strategy_file = models.FileField(upload_to='uploads/algos/', blank=True, null=True)
     approved = models.BooleanField(default=False)
     live = models.BooleanField(default=False)
@@ -39,28 +41,24 @@ class StrategyVote(models.Model):
     vote = models.BooleanField(default=False)
 
 
+class Stock(models.Model):
+    symbol = models.CharField(max_length=6, primary_key=True)
+    exchange = models.CharField(max_length=30)
+
+
 class Universe(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    stocks = models.ManyToManyField(Stock, related_name='stocks')
+    name = models.CharField(max_length=100, null=False, default='')
     updated = models.DateTimeField(auto_now_add=True, blank=True)
-
-
-class StockInUniverse(models.Model):
-    id = models.AutoField(primary_key=True)
-    universe = models.ForeignKey(Universe, on_delete=models.CASCADE)
-    symbol = models.CharField(max_length=6)
 
 
 class UsedUniverse(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100, null=False, default='')
     updated = models.DateTimeField(auto_now_add=True, blank=True)
-
-
-class StockInUsedUniverse(models.Model):
-    id = models.AutoField(primary_key=True)
-    used_universe = models.ForeignKey(UsedUniverse, on_delete=models.CASCADE)
-    symbol = models.CharField(max_length=6)
 
 
 class Backtest(models.Model):
@@ -86,6 +84,7 @@ class BacktestTrade(models.Model):
     buy_price = models.FloatField(null=False)
     sell_price = models.FloatField(null=False)
     qty = models.IntegerField(null=False)
+
 
 
 

@@ -1,11 +1,15 @@
-from rest_framework import generics
+from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework import status
 from marco_polo.models import AlpacaAPIKeys
 from marco_polo.serializers import AlpacaKeysSerializer
+from knox.auth import TokenAuthentication
 
 
 class AlpacaKeysAPI(generics.GenericAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+
     def post(self, request, *args, **kwargs):
         """ Add an Alpaca key pair """
 
