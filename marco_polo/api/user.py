@@ -9,8 +9,8 @@ from twilio.rest import Client
 
 
 class PictureAPI(generics.GenericAPIView):
-    #authentication_classes = (TokenAuthentication,)
-    #permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
         try:
