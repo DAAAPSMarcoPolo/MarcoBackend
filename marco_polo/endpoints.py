@@ -7,6 +7,8 @@ from marco_polo.api.api_keys import AlpacaKeysAPI
 from marco_polo.api.strategy import AlgorithmAPI, StrategyAPI
 from marco_polo.api.universe import UniverseAPI
 from marco_polo.api.alpaca import SeedAPI
+from marco_polo.api.stock import StockAPI
+
 
 router = routers.DefaultRouter()
 
@@ -38,7 +40,9 @@ urlpatterns = [
     # Get all algos
     url("^algorithms/$", StrategyAPI.as_view()),
     # Get single algo
-    url("^algorithms/(?P<algoID>\d+)/$", StrategyAPI.as_view())
+    url("^algorithms/(?P<algoID>\d+)/$", StrategyAPI.as_view()),
+    url("^stocks/$", StockAPI.as_view())
+
 
 
 ]

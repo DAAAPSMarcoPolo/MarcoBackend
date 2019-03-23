@@ -49,6 +49,7 @@ class Backtest:
 
         except ImportError as e:
             self.logger.error(e)
+            return [False, 'Strategy not found']
 
     # Validation Script
     def validate_strategy(self):
@@ -73,11 +74,13 @@ class Backtest:
         except:
             error = True
             self.logger.error('add_tech_ind() not implemented correctly')
+            return [False, 'add_tech_ind() not implemented correctly']
 
         if new_price_map:
             daily_data = tester.create_daily_data(new_price_map)
         else:
             self.logger.info('add_tech_ind() must be fixed before the rest of the functions are validated')
+            return [False, 'add_tech_ind() must be fixed before the rest of the functions are validated']
             sys.exit(1)
         # Test rank_stocks()
         try:
@@ -86,6 +89,7 @@ class Backtest:
         except Exception as e:
             error = True
             self.logger.error('rank_stocks() not implemented correctly')
+            return [False, 'rank_stocks() not implemented correctly']
 
         # Test stocks_to_sell()
         try:
@@ -95,6 +99,7 @@ class Backtest:
         except:
             error = True
             self.logger.error('stocks_to_sell() not implemented correctly')
+            return [False, 'stocks_to_sell() not implemented correctly']
 
         # Test stocks_to_buy()
         try:
@@ -105,13 +110,14 @@ class Backtest:
         except Exception as e:
             error = True
             self.logger.error('stocks_to_buy() not implemented correctly')
+            return [False, 'stocks_to_buy() not implemented correctly']
 
         if error:
             self.logger.info('Strategy does not conform to standards')
             sys.exit(1)
 
         self.logger.info('Strategy Validated')
-
+        return [True, 'valid']
 
     def set_historical_data(self):
         self.logger.info('Fetching Data...')
@@ -125,8 +131,10 @@ class Backtest:
             universe_data = DataFetcher(self.universe, self.start_date, self.end_date).daily_data()
             self.universe_data = universe_data
             self.logger.info('Complete.')
+            return [True, 'Successfully fetched data']
         else:
             self.logger.error('Start and end date must be less than 1000 days apart')
+            return [False, 'Start and end date must be less than 1000 days apart']
 
     def buy(self, symbol, entry_price, entry_time, allocated_funds):
         # buy the stock if we do not have it in our portfolio
@@ -209,12 +217,23 @@ class Backtest:
             curr_date = curr_date + day
 
         self.logger.info('Finished Backtest.')
+        stats = BTStats(self)
+        summary = stats.summary
+        return [True, summary]
 
     def run(self):
-        self.import_strategy()
-        self.set_historical_data()
+        result = self.import_strategy()
+        if not result[0]:
+            return result
+
+        result = self.set_historical_data()
+        if not result[0]:
+            return result
+
         self.universe_data = self.strategy.add_tech_ind(self.universe_data)
-        self.simulate()
+        result = self.simulate()
+
+        return [True, 'Backtest was successfully ran ']
 
 
 class Position:
@@ -251,6 +270,15 @@ class BTStats:
     def __init__(self, bt):
         self.bt = bt
         self.spy = DataFetcher(['SPY'], bt.start_date, bt.end_date).daily_data()['SPY']
+
+    @property
+    def summary(self):
+        return {
+            'profit': self.realized_profit,
+            'pct_return': self.pct_return,
+            'sharpe': self.sharpe
+        }
+
 
     @property
     def realized_profit(self):
@@ -296,6 +324,7 @@ class BTStats:
         else:
             sharpe = round(diff_return / s_d, 2)
         return sharpe
+
 
 class PrintColors:
     HEADER = '\033[95m'
