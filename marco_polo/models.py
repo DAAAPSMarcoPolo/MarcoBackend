@@ -26,6 +26,8 @@ class AlpacaAPIKeys(models.Model):
 class Strategy(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.TextField(max_length=None, null=True)
+    description = models.TextField(max_length=None, null=True)
     strategy_file = models.FileField(upload_to='uploads/algos/', blank=True, null=True)
     approved = models.BooleanField(default=False)
     live = models.BooleanField(default=False)
@@ -47,7 +49,7 @@ class Stock(models.Model):
 class Universe(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    stocks = models.ManyToManyField(Stock)
+    stocks = models.ManyToManyField(Stock, related_name='stocks')
     name = models.CharField(max_length=100, null=False, default='')
     updated = models.DateTimeField(auto_now_add=True, blank=True)
 
