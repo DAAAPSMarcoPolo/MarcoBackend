@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core import serializers
 from marco_polo.models import Stock, AlpacaAPIKeys
-from marco_polo.serializers import UniverseSerializer, StockInUniverseSerializer
+from marco_polo.serializers import UniverseSerializer
 from knox.auth import TokenAuthentication
 import alpaca_trade_api as tradeapi
 
