@@ -2,25 +2,14 @@ from __future__ import division
 import math
 import statistics
 import logging
-import time
-import sys
 from datetime import datetime, timedelta
 import pandas as pd
 import importlib
-import pickle
 import pyclbr
-import sys
-sys.path.append('.../..')
-sys.path.append('../backendStorage/uploads/algos')
-import marco_polo.backendStorage.uploads.algos
-
-
 from marco_polo.backtesting.market_data import DataFetcher
 from marco_polo.backtesting.defaultUniverses.sp500 import Universe
 from marco_polo.backtesting.test_data import Test
-
-# from strategies.strategy_template import Strategy
-
+import sys
 
 class Backtest:
 
@@ -42,15 +31,16 @@ class Backtest:
         logging.basicConfig(level=logging.INFO)
 
     def import_strategy(self):
+        sys.path.append("../backendStorage")
+
         try:
             from os import listdir
             from os.path import isfile, join
-            strategy = importlib.import_module('marco_polo.backendStorage.uploads.algos.'+self.strategy)
-            module_info = pyclbr.readmodule('marco_polo.backendStorage.uploads.algos.'+self.strategy)
+            strategy = importlib.import_module('uploads.algos.'+self.strategy)
+            module_info = pyclbr.readmodule('uploads.algos.'+self.strategy)
 
             class_name = None
             for item in module_info.values():
-                print(item.name)
                 class_name = item.name
 
             self.strategy = getattr(strategy, class_name)()
@@ -59,6 +49,9 @@ class Backtest:
         except ImportError as e:
             self.logger.error(e)
             return [False, 'Strategy not found']
+
+        return [True, 'imported successfully']
+
 
     # Validation Script
     def validate_strategy(self):
