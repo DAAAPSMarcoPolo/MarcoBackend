@@ -11,8 +11,8 @@ import pickle
 import pyclbr
 import sys
 sys.path.append('.../..')
-sys.path.append('../backendStorage/uploads/algos')
-import marco_polo.backendStorage.uploads.algos
+#sys.path.append('../backendStorage/uploads/algos')
+#import marco_polo.backendStorage.uploads.algos
 
 
 from marco_polo.backtesting.market_data import DataFetcher
