@@ -25,7 +25,14 @@ class UniverseAPI(generics.GenericAPIView):
             return Response("Could not create new universe", status=status.HTTP_400_BAD_REQUEST)
 
         stock_list = request.data["universe"]
-        universe.stocks.add(*stock_list)
+        stocks_to_add = []
+        for stock in stock_list:
+            try:
+                Stock.objects.get(symbol=stock)
+                stocks_to_add.append(stock)
+            except:
+                pass
+        universe.stocks.add(*stocks_to_add)
         universe = Universe.objects.get(id=universe_id)
         result_universe = UniverseSerializer(universe, context=self.get_serializer_context()).data
 
