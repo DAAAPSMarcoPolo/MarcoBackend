@@ -17,6 +17,7 @@ class Backtest:
 
     def __init__(self, strategy, initial_funds, universe, start_date, end_date):
         self.strategy = strategy
+        self.strategy_name = strategy
         self.initial_funds = float(initial_funds)
         self.current_funds = float(initial_funds)
         self.daily_returns = []
@@ -277,6 +278,7 @@ class BTStats:
     @property
     def summary(self):
         return {
+            'end_funds': self.bt.current_funds,
             'profit': self.realized_profit,
             'pct_return': self.pct_return,
             'sharpe': self.sharpe
