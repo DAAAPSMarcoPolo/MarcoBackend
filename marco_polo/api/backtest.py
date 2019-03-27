@@ -49,7 +49,8 @@ class BacktestAPI(generics.GenericAPIView):
             'end_date': data['end_date'],
             'initial_cash': data['initial_funds'],
             'end_cash': data['initial_funds'],
-            'sharpe': -1
+            'sharpe': -1,
+            'successful': True
         }
         new_backtest_object = Backtest(**bt)
         new_backtest_object.save()
