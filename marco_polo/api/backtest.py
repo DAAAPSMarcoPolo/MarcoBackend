@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from knox.auth import TokenAuthentication
 from marco_polo.backtesting.backtest import Backtest as BT, BTStats
-from marco_polo.models import Universe, Backtest, Strategy, UsedUniverse, Stock, User
-from marco_polo.serializers import UniverseSerializer, UsedUniverseSerializer
+from marco_polo.models import Universe, Backtest, Strategy, UsedUniverse, Stock, User, BacktestTrade
+from marco_polo.serializers import UniverseSerializer, UsedUniverseSerializer, BacktestSerializer, BacktestTradeSerializer
 import threading
 from django.conf import settings
 from twilio.rest import Client
@@ -16,7 +16,6 @@ class BacktestAPI(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
-        """ Add an Alpaca key pair """
         data = self.request.data
         universe = Universe.objects.get(id=data['universe'])
         strategy = Strategy.objects.get(id=data['strategy'])
@@ -56,13 +55,14 @@ class BacktestAPI(generics.GenericAPIView):
         universe = UniverseSerializer(universe, context=self.get_serializer_context()).data
         universe = universe['stocks']
         data['universe'] = universe
-        data['strategy'] = Path(strategy.strategy_file).stem
+        data['strategy'] = Path(strategy.strategy_file.path).stem
+        strategy_name = strategy.name
         new_backtest = BT(**data)
         user = User.objects.select_related('profile') \
                 .values('username', 'first_name', 'last_name', 'profile__phone_number') \
                 .get(username=request.user.username)
         t2 = threading.Thread(target=self.backtest_helper,
-                             args=(user, new_backtest_object.id, new_backtest))
+                             args=(user, new_backtest_object.id, strategy_name, new_backtest))
         t2.setDaemon(True)
         t2.start()
 
@@ -73,7 +73,7 @@ class BacktestAPI(generics.GenericAPIView):
         # TODO
         return Response(request.data, status=status.HTTP_200_OK)
 
-    def backtest_helper(self, user, bt_id, backtest):
+    def backtest_helper(self, user, bt_id, strategy_name, backtest):
         backtest.run()
         while backtest.running:
             pass
@@ -86,8 +86,20 @@ class BacktestAPI(generics.GenericAPIView):
         print('bt is now complete')
         client = Client(settings.TWILIO_ACC_SID,
                         settings.TWILIO_AUTH_TOKEN)
-        body = "Your backtest on \'" + backtest.strategy_name + "\'" + 'between ' + backtest.start_date + ' and ' + backtest.end_date + 'has been completed.'
-        print(user['profile__phone_number'])
+        body = "Your backtest on \'" + strategy_name + "\'" + ' between ' + backtest.start_date + ' and ' + backtest.end_date + ' has been completed.'
+
+        for trade in backtest.trades:
+            new_trade = {
+                'backtest': bt,
+                'symbol': trade.symbol,
+                'buy_time': trade.entry_time,
+                'sell_time': trade.exit_time,
+                'buy_price': trade.entry_price,
+                'sell_price': trade.exit_price,
+                'qty': trade.exit_price
+            }
+            BacktestTrade.objects.create(**new_trade)
+
         try:
             client.messages.create(
                 body=body,
@@ -108,3 +120,54 @@ class BacktestAPI(generics.GenericAPIView):
             except:
                 pass
         used_universe.stocks.add(*stocks_to_add)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            id = self.kwargs["id"]
+            backtest = Backtest.objects.get(id=id)
+            backtest = BacktestSerializer(backtest, context=self.get_serializer_context()).data
+            trades = BacktestTrade.objects.filter(backtest=id).values()
+            backest_details = {
+                'backtest': backtest,
+                'trades': trades
+            }
+
+            return Response(backest_details, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            backtests = []
+            backtest_list = Backtest.objects.all()
+            for backtest in backtest_list:
+                bt = BacktestSerializer(backtest, context=self.get_serializer_context()).data
+                trades = BacktestTrade.objects.filter(backtest=backtest.id).values()
+                backest_details = {
+                    'backtest': bt,
+                    'trades': trades
+                }
+                backtests.append(backest_details)
+
+            return Response(backtests, status=status.HTTP_200_OK)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            print('here')
+            backtests = []
+            id = self.kwargs["id"]
+            strategy = Strategy.objects.get(id=id)
+            backtest_list = Backtest.objects.filter(strategy=strategy)
+            for backtest in backtest_list:
+                bt = BacktestSerializer(backtest, context=self.get_serializer_context()).data
+                trades = BacktestTrade.objects.filter(backtest=backtest.id).values()
+                backest_details = {
+                    'backtest': bt,
+                    'trades': trades
+                }
+                backtests.append(backest_details)
+
+            return Response(backtests, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(backtests, status=status.HTTP_400_BAD_REQUEST)
+
+
+

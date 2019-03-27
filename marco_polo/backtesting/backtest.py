@@ -255,10 +255,10 @@ class Position:
 class Trade:
     def __init__(self, position, exit_time, exit_price):
         self.symbol = position.symbol
-        self.entry_time = position.entry_price
+        self.entry_time = position.entry_time
         self.exit_time = exit_time
         self.entry_price = position.entry_price
-        self.exit_price = exit_time
+        self.exit_price = exit_price
         self.qty = position.qty
 
     @property
