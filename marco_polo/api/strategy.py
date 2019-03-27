@@ -36,12 +36,12 @@ class StrategyAPI(generics.GenericAPIView):
         # GET single algorithm details
         if 'algoID' in kwargs:
             try:
-                algoID = kwargs['algoID']
-                print(algoID)
+                id = self.kwargs['id']
+                print(id)
                 algo = Strategy.objects.values(
-                    'name', 'description', 'user', 'created_at', 'approved').get(id=algoID)
+                    'name', 'description', 'user', 'created_at', 'approved').get(id=id)
                 backtest_list = Backtest.objects.filter(
-                    strategy=algoID)
+                    strategy=id)
                 data = {
                     'algo_details': algo,
                     'bt_list': backtest_list
@@ -55,8 +55,6 @@ class StrategyAPI(generics.GenericAPIView):
         try:
             all_strats = Strategy.objects.all().values(
                 'id', 'name', 'description', 'user', 'created_at', 'approved')
-            for strat in all_strats: 
-                print(strat)
             return Response(all_strats, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)

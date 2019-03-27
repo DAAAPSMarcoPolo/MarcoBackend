@@ -39,7 +39,8 @@ urlpatterns = [
   # Only to seed the db with tradable stocks
   url("^stockseed/$", SeedAPI.as_view()),
   # Get all algos
-  url("^algos/$", StrategyAPI.as_view()),
+  url("^algorithm/$", StrategyAPI.as_view()),
+  url("^algorithm/(?P<id>\d+)/$", StrategyAPI.as_view()),
   # Get stocks
   url("^stocks/$", StockAPI.as_view()),
   # Run backtest
