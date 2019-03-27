@@ -16,7 +16,7 @@ class StrategyBacktests(generics.GenericAPIView):
             backtests = []
             id = self.kwargs["id"]
             strategy = Strategy.objects.get(id=id)
-            backtest_list = Backtest.objects.filter(strategy=strategy).order_by('-created_at')
+            backtest_list = Backtest.objects.filter(strategy=strategy, successful=True).order_by('-created_at')
             for backtest in backtest_list:
                 bt = BacktestSerializer(backtest, context=self.get_serializer_context()).data
                 trades = BacktestTrade.objects.filter(backtest=backtest.id).values()

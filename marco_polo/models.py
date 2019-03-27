@@ -68,6 +68,7 @@ class Backtest(models.Model):
     universe = models.OneToOneField(UsedUniverse, on_delete=models.CASCADE, related_name='universe')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     complete = models.BooleanField(default=False)
+    successful = models.BooleanField(default=True)
     start_date = models.DateTimeField(null=False)
     end_date = models.DateTimeField(null=False)
     initial_cash = models.FloatField(null=False)

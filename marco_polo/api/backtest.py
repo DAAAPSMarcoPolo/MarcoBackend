@@ -70,35 +70,42 @@ class BacktestAPI(generics.GenericAPIView):
         return Response('bt is running now!', status=status.HTTP_201_CREATED)
 
     def backtest_helper(self, user, bt_id, strategy_name, backtest):
-        backtest.run()
+        result = backtest.run()
         while backtest.running:
             pass
 
-        stats = BTStats(backtest).summary
         bt = Backtest.objects.get(id=bt_id)
-        bt.end_cash = stats['end_funds']
-        bt.sharpe = stats['sharpe']
-        bt.complete = True
-        print('bt is now complete')
         client = Client(settings.TWILIO_ACC_SID,
                         settings.TWILIO_AUTH_TOKEN)
 
-        locale.setlocale(locale.LC_ALL, '')
-        cash = locale.currency(backtest.initial_funds, grouping=True)
-        body = "Your backtest on \'" + strategy_name + "\'" + ' between ' + backtest.start_date + ' and ' + \
-               backtest.end_date + ' with ' + cash + ' has been completed.'
+        if result[0]:
+            stats = BTStats(backtest).summary
+            bt.end_cash = stats['end_funds']
+            bt.sharpe = stats['sharpe']
+            bt.complete = True
+            print('bt is now complete')
+            locale.setlocale(locale.LC_ALL, '')
+            cash = locale.currency(backtest.initial_funds, grouping=True)
+            body = "Your backtest on \'" + strategy_name + "\'" + ' between ' + backtest.start_date + ' and ' + \
+                   backtest.end_date + ' with ' + cash + ' has been completed.'
 
-        for trade in backtest.trades:
-            new_trade = {
-                'backtest': bt,
-                'symbol': trade.symbol,
-                'buy_time': trade.entry_time,
-                'sell_time': trade.exit_time,
-                'buy_price': trade.entry_price,
-                'sell_price': trade.exit_price,
-                'qty': trade.exit_price
-            }
-            BacktestTrade.objects.create(**new_trade)
+            for trade in backtest.trades:
+                new_trade = {
+                    'backtest': bt,
+                    'symbol': trade.symbol,
+                    'buy_time': trade.entry_time,
+                    'sell_time': trade.exit_time,
+                    'buy_price': trade.entry_price,
+                    'sell_price': trade.exit_price,
+                    'qty': trade.exit_price
+                }
+                BacktestTrade.objects.create(**new_trade)
+
+        else:
+            bt.successful = False
+            bt.complete = False
+            body = "Your backtest on \'" + strategy_name + "\'" + ' between ' + backtest.start_date + ' and ' + \
+                   backtest.end_date + ' has failed with the following message: \n\n' + result[1]
 
         try:
             client.messages.create(
@@ -109,6 +116,7 @@ class BacktestAPI(generics.GenericAPIView):
         except Exception as e:
             print("Twilio error:")
             print(e)
+
         bt.save()
 
     def add_stocks(self, used_universe, stock_list):
@@ -137,7 +145,7 @@ class BacktestAPI(generics.GenericAPIView):
 
         except Exception as e:
             backtests = []
-            backtest_list = Backtest.objects.order_by('-created_at')
+            backtest_list = Backtest.objects.filter(successful=True).order_by('-created_at')
             for backtest in backtest_list:
                 bt = BacktestSerializer(backtest, context=self.get_serializer_context()).data
                 trades = BacktestTrade.objects.filter(backtest=backtest.id).values()
