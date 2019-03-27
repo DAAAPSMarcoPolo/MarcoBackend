@@ -56,7 +56,6 @@ class UserSettingsAPI(generics.GenericAPIView):
         user.first_name = request.data['first_name']
         user.last_name = request.data['last_name']
         profile.phone_number = request.data['phone_number']
-
         # TODO save password
         if 'new_password' in request.data:
             password = request.data['password']
