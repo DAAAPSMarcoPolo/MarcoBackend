@@ -2,24 +2,14 @@ from __future__ import division
 import math
 import statistics
 import logging
-import time
-import sys
 from datetime import datetime, timedelta
 import pandas as pd
 import importlib
-import pickle
 import pyclbr
-import sys
-sys.path.append('.../..')
-sys.path.append('/Users/dpiotti/PycharmProjects/backendStorage/uploads')
-
-
 from marco_polo.backtesting.market_data import DataFetcher
 from marco_polo.backtesting.defaultUniverses.sp500 import Universe
 from marco_polo.backtesting.test_data import Test
-
-# from strategies.strategy_template import Strategy
-
+import sys
 
 class Backtest:
 
@@ -27,6 +17,7 @@ class Backtest:
 
     def __init__(self, strategy, initial_funds, universe, start_date, end_date):
         self.strategy = strategy
+        self.strategy_name = strategy
         self.initial_funds = float(initial_funds)
         self.current_funds = float(initial_funds)
         self.daily_returns = []
@@ -41,17 +32,16 @@ class Backtest:
         logging.basicConfig(level=logging.INFO)
 
     def import_strategy(self):
+        sys.path.append("../backendStorage")
+
         try:
             from os import listdir
             from os.path import isfile, join
-            onlyfiles = [f for f in listdir('/Users/dpiotti/PycharmProjects/backendStorage/uploads') if isfile(join('/Users/dpiotti/PycharmProjects/backendStorage/uploads', f))]
-            print(onlyfiles)
-            strategy = importlib.import_module(package='../../backendStorage/uploads/algos/', name=self.strategy)
-            module_info = pyclbr.readmodule('../../backendStorage/uploads/algos/' + self.strategy)
+            strategy = importlib.import_module('uploads.algos.'+self.strategy)
+            module_info = pyclbr.readmodule('uploads.algos.'+self.strategy)
 
             class_name = None
             for item in module_info.values():
-                print(item.name)
                 class_name = item.name
 
             self.strategy = getattr(strategy, class_name)()
@@ -60,6 +50,9 @@ class Backtest:
         except ImportError as e:
             self.logger.error(e)
             return [False, 'Strategy not found']
+
+        return [True, 'imported successfully']
+
 
     # Validation Script
     def validate_strategy(self):
@@ -262,10 +255,10 @@ class Position:
 class Trade:
     def __init__(self, position, exit_time, exit_price):
         self.symbol = position.symbol
-        self.entry_time = position.entry_price
+        self.entry_time = position.entry_time
         self.exit_time = exit_time
         self.entry_price = position.entry_price
-        self.exit_price = exit_time
+        self.exit_price = exit_price
         self.qty = position.qty
 
     @property
@@ -285,6 +278,7 @@ class BTStats:
     @property
     def summary(self):
         return {
+            'end_funds': self.bt.current_funds,
             'profit': self.realized_profit,
             'pct_return': self.pct_return,
             'sharpe': self.sharpe
