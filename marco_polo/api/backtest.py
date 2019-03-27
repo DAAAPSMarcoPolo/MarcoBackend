@@ -9,6 +9,7 @@ import threading
 from django.conf import settings
 from twilio.rest import Client
 from pathlib import Path
+import locale
 
 
 class BacktestAPI(generics.GenericAPIView):
@@ -33,7 +34,7 @@ class BacktestAPI(generics.GenericAPIView):
 
         stock_list = UniverseSerializer(universe, context=self.get_serializer_context()).data['stocks']
 
-        t = threading.Thread(target=self.backtest_helper,
+        t = threading.Thread(target=self.add_stocks,
                               args=(used_universe, stock_list))
         t.setDaemon(True)
         t.start()
@@ -68,11 +69,6 @@ class BacktestAPI(generics.GenericAPIView):
 
         return Response('bt is running now!', status=status.HTTP_201_CREATED)
 
-    def get(self, request, *args, **kwargs):
-        """ Update an Alpaca key pair """
-        # TODO
-        return Response(request.data, status=status.HTTP_200_OK)
-
     def backtest_helper(self, user, bt_id, strategy_name, backtest):
         backtest.run()
         while backtest.running:
@@ -86,7 +82,11 @@ class BacktestAPI(generics.GenericAPIView):
         print('bt is now complete')
         client = Client(settings.TWILIO_ACC_SID,
                         settings.TWILIO_AUTH_TOKEN)
-        body = "Your backtest on \'" + strategy_name + "\'" + ' between ' + backtest.start_date + ' and ' + backtest.end_date + ' has been completed.'
+
+        locale.setlocale(locale.LC_ALL, '')
+        cash = locale.currency(backtest.initial_funds, grouping=True)
+        body = "Your backtest on \'" + strategy_name + "\'" + ' between ' + backtest.start_date + ' and ' + \
+               backtest.end_date + ' with ' + cash + ' has been completed.'
 
         for trade in backtest.trades:
             new_trade = {
@@ -117,7 +117,8 @@ class BacktestAPI(generics.GenericAPIView):
             try:
                 Stock.objects.get(symbol=stock)
                 stocks_to_add.append(stock)
-            except:
+            except Exception as e:
+                print(e)
                 pass
         used_universe.stocks.add(*stocks_to_add)
 
@@ -136,7 +137,7 @@ class BacktestAPI(generics.GenericAPIView):
 
         except Exception as e:
             backtests = []
-            backtest_list = Backtest.objects.all()
+            backtest_list = Backtest.objects.order_by('-created_at')
             for backtest in backtest_list:
                 bt = BacktestSerializer(backtest, context=self.get_serializer_context()).data
                 trades = BacktestTrade.objects.filter(backtest=backtest.id).values()

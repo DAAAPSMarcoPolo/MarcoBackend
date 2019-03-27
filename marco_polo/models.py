@@ -57,7 +57,7 @@ class Universe(models.Model):
 class UsedUniverse(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    stocks = models.ManyToManyField(Stock, related_name='used_stocks')
+    stocks = models.ManyToManyField(Stock)
     name = models.CharField(max_length=100, null=False, default='')
     updated = models.DateTimeField(auto_now_add=True, blank=True)
 

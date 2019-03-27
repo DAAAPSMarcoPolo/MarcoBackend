@@ -207,42 +207,136 @@ Response:
 ```json
 {
     "backtest": {
-        "id": 16,
+        "id": 19,
+        "universe": {
+            "id": 23,
+            "name": "Universe for quick backtest",
+            "updated": "2019-03-27T14:49:28.515380Z",
+            "user": 5,
+            "stocks": [
+                "BIOC",
+                "ALDX",
+                "BA",
+                "SAEX",
+                "TSLA",
+                "MAXR",
+                "DGAZ",
+                "UGAZ",
+                "MSFT"
+            ]
+        },
+        "strategy": {
+            "id": 34,
+            "name": "mean_reversion",
+            "description": "mean reversion",
+            "strategy_file": "http://localhost:8000/backendStorage/uploads/algos/mean_reversion.py",
+            "approved": false,
+            "live": false,
+            "created_at": "2019-03-23T19:11:36.123175Z",
+            "user": 5
+        },
         "complete": true,
         "start_date": "2018-01-01T00:00:00Z",
         "end_date": "2019-03-01T00:00:00Z",
         "initial_cash": 2000,
         "end_cash": 4093.0496,
         "sharpe": 2.89,
-        "created_at": "2019-03-27T00:18:08.572453Z",
-        "strategy": 34,
-        "universe": 20,
+        "created_at": "2019-03-27T14:49:28.912147Z",
         "user": 5
     },
     "trades": [
         {
-            "id": 207,
-            "backtest_id": 16,
+            "id": 443,
+            "backtest_id": 19,
             "symbol": "DGAZ",
-            "buy_time": "2019-03-27T00:18:17.251256Z",
-            "sell_time": "2019-03-27T00:18:17.251316Z",
+            "buy_time": "2019-03-27T14:49:38.528675Z",
+            "sell_time": "2019-03-27T14:49:38.528736Z",
             "buy_price": 24.65,
             "sell_price": 32.15,
             "qty": 32
         },
         {
-            "id": 208,
-            "backtest_id": 16,
+            "id": 444,
+            "backtest_id": 19,
             "symbol": "MSFT",
-            "buy_time": "2019-03-27T00:18:17.398419Z",
-            "sell_time": "2019-03-27T00:18:17.398472Z",
+            "buy_time": "2019-03-27T14:49:38.674042Z",
+            "sell_time": "2019-03-27T14:49:38.674064Z",
             "buy_price": 87.66,
             "sell_price": 88.2,
             "qty": 88
         }
     ]
 }
+```
 
+#### GET /api/backtest/
+##### returns an aray of all completed backtests
+Response:
+```json
+[
+    {
+        "backtest": {
+            "id": 19,
+            "universe": {
+                "id": 23,
+                "name": "Universe for quick backtest",
+                "updated": "2019-03-27T14:49:28.515380Z",
+                "user": 5,
+                "stocks": [
+                    "BIOC",
+                    "ALDX",
+                    "BA",
+                    "SAEX",
+                    "TSLA",
+                    "MAXR",
+                    "DGAZ",
+                    "UGAZ",
+                    "MSFT"
+                ]
+            },
+            "strategy": {
+                "id": 34,
+                "name": "mean_reversion",
+                "description": "mean reversion",
+                "strategy_file": "http://localhost:8000/backendStorage/uploads/algos/mean_reversion.py",
+                "approved": false,
+                "live": false,
+                "created_at": "2019-03-23T19:11:36.123175Z",
+                "user": 5
+            },
+            "complete": true,
+            "start_date": "2018-01-01T00:00:00Z",
+            "end_date": "2019-03-01T00:00:00Z",
+            "initial_cash": 2000,
+            "end_cash": 4093.0496,
+            "sharpe": 2.89,
+            "created_at": "2019-03-27T14:49:28.912147Z",
+            "user": 5
+        },
+        "trades": [
+            {
+                "id": 443,
+                "backtest_id": 19,
+                "symbol": "DGAZ",
+                "buy_time": "2019-03-27T14:49:38.528675Z",
+                "sell_time": "2019-03-27T14:49:38.528736Z",
+                "buy_price": 24.65,
+                "sell_price": 32.15,
+                "qty": 32
+            },
+            {
+                "id": 444,
+                "backtest_id": 19,
+                "symbol": "MSFT",
+                "buy_time": "2019-03-27T14:49:38.674042Z",
+                "sell_time": "2019-03-27T14:49:38.674064Z",
+                "buy_price": 87.66,
+                "sell_price": 88.2,
+                "qty": 88
+            }
+        ]
+    }
+]
 ```
 
 #### GET /api/backtest/\<backtestId\>
