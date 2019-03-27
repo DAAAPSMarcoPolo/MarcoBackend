@@ -384,7 +384,37 @@ Response:
 ]
 
 ```
+#### GET /api/algorithm/
+##### returns an array of all strategies 
+Response:
+```json
+[
+    {
+        "id": 34,
+        "name": "mean_reversion",
+        "description": "mean reversion",
+        "user": 5,
+        "created_at": "2019-03-23T19:11:36.123175Z",
+        "approved": false
+    }
+]
+```
 
+#### GET /api/algorithm/\<strategyId\>
+##### returns an array of strategy specified by strategyid 
+Response:
+```json
+[
+    {
+        "id": 34,
+        "name": "mean_reversion",
+        "description": "mean reversion",
+        "user": 5,
+        "created_at": "2019-03-23T19:11:36.123175Z",
+        "approved": false
+    }
+]
+```
 
 ## Strategy Backtest
 #### GET /api/strategybacktests/\<StrategyId\>
