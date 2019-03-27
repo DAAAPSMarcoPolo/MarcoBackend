@@ -27,21 +27,21 @@ class AlgorithmAPI(generics.GenericAPIView):
             return Response("Could not create new strategy", status=status.HTTP_400_BAD_REQUEST)
 
 
-# /algorithms/<algoID>
+# /algorithm/<id>
 class StrategyAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
         # GET single algorithm details
-        if 'algoID' in kwargs:
+        if 'id' in kwargs:
             try:
                 id = self.kwargs['id']
                 print(id)
                 algo = Strategy.objects.values(
                     'name', 'description', 'user', 'created_at', 'approved').get(id=id)
                 backtest_list = Backtest.objects.filter(
-                    strategy=id)
+                    strategy=id).values()
                 data = {
                     'algo_details': algo,
                     'bt_list': backtest_list
