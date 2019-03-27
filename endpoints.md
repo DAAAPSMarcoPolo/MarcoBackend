@@ -182,3 +182,157 @@ Response:
     "secret_key": "dhaukri3uqewd2fiu"
 }
 ```
+
+
+## Backtest
+#### POST /api/backtest/
+##### runs a backtest.  A response will be given to the front end right away and the user will receive a text after the backtest finishes running
+Send:
+```json
+{
+	"strategy": 34,
+	"universe": 65,
+	"start_date": "2018-1-1",
+	"end_date": "2019-3-1",
+	"initial_funds": 2000
+}
+```
+Response:
+```
+"backtest is running"
+```
+#### GET /api/backtest/\<backtestId\>
+##### returns one backtest object
+Response:
+```json
+{
+    "backtest": {
+        "id": 16,
+        "complete": true,
+        "start_date": "2018-01-01T00:00:00Z",
+        "end_date": "2019-03-01T00:00:00Z",
+        "initial_cash": 2000,
+        "end_cash": 4093.0496,
+        "sharpe": 2.89,
+        "created_at": "2019-03-27T00:18:08.572453Z",
+        "strategy": 34,
+        "universe": 20,
+        "user": 5
+    },
+    "trades": [
+        {
+            "id": 207,
+            "backtest_id": 16,
+            "symbol": "DGAZ",
+            "buy_time": "2019-03-27T00:18:17.251256Z",
+            "sell_time": "2019-03-27T00:18:17.251316Z",
+            "buy_price": 24.65,
+            "sell_price": 32.15,
+            "qty": 32
+        },
+        {
+            "id": 208,
+            "backtest_id": 16,
+            "symbol": "MSFT",
+            "buy_time": "2019-03-27T00:18:17.398419Z",
+            "sell_time": "2019-03-27T00:18:17.398472Z",
+            "buy_price": 87.66,
+            "sell_price": 88.2,
+            "qty": 88
+        }
+    ]
+}
+
+```
+
+#### GET /api/backtest/\<backtestId\>
+##### returns an array of backtest objects containing all backtests run
+Response:
+```json
+[
+{
+    "backtest": {
+        "id": 16,
+        "complete": true,
+        "start_date": "2018-01-01T00:00:00Z",
+        "end_date": "2019-03-01T00:00:00Z",
+        "initial_cash": 2000,
+        "end_cash": 4093.0496,
+        "sharpe": 2.89,
+        "created_at": "2019-03-27T00:18:08.572453Z",
+        "strategy": 34,
+        "universe": 20,
+        "user": 5
+    },
+    "trades": [
+        {
+            "id": 207,
+            "backtest_id": 16,
+            "symbol": "DGAZ",
+            "buy_time": "2019-03-27T00:18:17.251256Z",
+            "sell_time": "2019-03-27T00:18:17.251316Z",
+            "buy_price": 24.65,
+            "sell_price": 32.15,
+            "qty": 32
+        },
+        {
+            "id": 208,
+            "backtest_id": 16,
+            "symbol": "MSFT",
+            "buy_time": "2019-03-27T00:18:17.398419Z",
+            "sell_time": "2019-03-27T00:18:17.398472Z",
+            "buy_price": 87.66,
+            "sell_price": 88.2,
+            "qty": 88
+        }
+    ]
+}
+]
+
+```
+
+
+## Strategy Backtest
+#### GET /api/strategybacktests/\<StrategyId\>
+##### This function will return an array of all backtests run for a specified strategy
+Response:
+```json
+[
+{
+    "backtest": {
+        "id": 16,
+        "complete": true,
+        "start_date": "2018-01-01T00:00:00Z",
+        "end_date": "2019-03-01T00:00:00Z",
+        "initial_cash": 2000,
+        "end_cash": 4093.0496,
+        "sharpe": 2.89,
+        "created_at": "2019-03-27T00:18:08.572453Z",
+        "strategy": 34,
+        "universe": 20,
+        "user": 5
+    },
+    "trades": [
+        {
+            "id": 207,
+            "backtest_id": 16,
+            "symbol": "DGAZ",
+            "buy_time": "2019-03-27T00:18:17.251256Z",
+            "sell_time": "2019-03-27T00:18:17.251316Z",
+            "buy_price": 24.65,
+            "sell_price": 32.15,
+            "qty": 32
+        },
+        {
+            "id": 208,
+            "backtest_id": 16,
+            "symbol": "MSFT",
+            "buy_time": "2019-03-27T00:18:17.398419Z",
+            "sell_time": "2019-03-27T00:18:17.398472Z",
+            "buy_price": 87.66,
+            "sell_price": 88.2,
+            "qty": 88
+        }
+    ]
+}
+]
