@@ -148,26 +148,3 @@ class BacktestAPI(generics.GenericAPIView):
 
             return Response(backtests, status=status.HTTP_200_OK)
 
-    def get(self, request, *args, **kwargs):
-        try:
-            print('here')
-            backtests = []
-            id = self.kwargs["id"]
-            strategy = Strategy.objects.get(id=id)
-            backtest_list = Backtest.objects.filter(strategy=strategy)
-            for backtest in backtest_list:
-                bt = BacktestSerializer(backtest, context=self.get_serializer_context()).data
-                trades = BacktestTrade.objects.filter(backtest=backtest.id).values()
-                backest_details = {
-                    'backtest': bt,
-                    'trades': trades
-                }
-                backtests.append(backest_details)
-
-            return Response(backtests, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            return Response(backtests, status=status.HTTP_400_BAD_REQUEST)
-
-
-
