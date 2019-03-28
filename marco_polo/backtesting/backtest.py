@@ -22,6 +22,7 @@ class Backtest:
 
     def __init__(self, strategy, initial_funds, universe, start_date, end_date):
         self.strategy = strategy
+        self.strategy_name = strategy
         self.initial_funds = float(initial_funds)
         self.current_funds = float(initial_funds)
         self.daily_returns = []
@@ -53,7 +54,7 @@ class Backtest:
 
         except ImportError as e:
             self.logger.error(e)
-            return [False, 'Strategy not found']
+            return [False, e]
 
         return [True, 'imported successfully']
 
@@ -81,13 +82,13 @@ class Backtest:
         except:
             error = True
             self.logger.error('add_tech_ind() not implemented correctly')
-            return [False, 'add_tech_ind() not implemented correctly']
+            return [False, 'add_tech_ind() not implemented correctly.']
 
         if new_price_map:
             daily_data = tester.create_daily_data(new_price_map)
         else:
             self.logger.info('add_tech_ind() must be fixed before the rest of the functions are validated')
-            return [False, 'add_tech_ind() must be fixed before the rest of the functions are validated']
+            return [False, 'add_tech_ind() must be fixed before the rest of the functions are validated.']
             sys.exit(1)
         # Test rank_stocks()
         try:
@@ -96,7 +97,7 @@ class Backtest:
         except Exception as e:
             error = True
             self.logger.error('rank_stocks() not implemented correctly')
-            return [False, 'rank_stocks() not implemented correctly']
+            return [False, 'rank_stocks() not implemented correctly.']
 
         # Test stocks_to_sell()
         try:
@@ -106,7 +107,7 @@ class Backtest:
         except:
             error = True
             self.logger.error('stocks_to_sell() not implemented correctly')
-            return [False, 'stocks_to_sell() not implemented correctly']
+            return [False, 'stocks_to_sell() not implemented correctly.']
 
         # Test stocks_to_buy()
         try:
@@ -117,7 +118,7 @@ class Backtest:
         except Exception as e:
             error = True
             self.logger.error('stocks_to_buy() not implemented correctly')
-            return [False, 'stocks_to_buy() not implemented correctly']
+            return [False, 'stocks_to_buy() not implemented correctly.']
 
         if error:
             self.logger.info('Strategy does not conform to standards')
@@ -141,7 +142,7 @@ class Backtest:
             return [True, 'Successfully fetched data']
         else:
             self.logger.error('Start and end date must be less than 1000 days apart')
-            return [False, 'Start and end date must be less than 1000 days apart']
+            return [False, 'Start and end date must be less than 1000 days apart.']
 
     def buy(self, symbol, entry_price, entry_time, allocated_funds):
         # buy the stock if we do not have it in our portfolio
@@ -231,17 +232,19 @@ class Backtest:
     def run(self):
         result = self.import_strategy()
         if not result[0]:
+            self.running = False
             return result
 
         result = self.set_historical_data()
         if not result[0]:
+            self.running = False
             return result
 
         self.universe_data = self.strategy.add_tech_ind(self.universe_data)
         result = self.simulate()
         self.running = False
 
-        return [True, 'Backtest was successfully ran ']
+        return [True, 'Backtest has ran successfully.']
 
 
 class Position:
@@ -259,10 +262,10 @@ class Position:
 class Trade:
     def __init__(self, position, exit_time, exit_price):
         self.symbol = position.symbol
-        self.entry_time = position.entry_price
+        self.entry_time = position.entry_time
         self.exit_time = exit_time
         self.entry_price = position.entry_price
-        self.exit_price = exit_time
+        self.exit_price = exit_price
         self.qty = position.qty
 
     @property
@@ -282,6 +285,7 @@ class BTStats:
     @property
     def summary(self):
         return {
+            'end_funds': self.bt.current_funds,
             'profit': self.realized_profit,
             'pct_return': self.pct_return,
             'sharpe': self.sharpe

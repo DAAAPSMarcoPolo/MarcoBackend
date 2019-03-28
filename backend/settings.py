@@ -151,4 +151,4 @@ CORS_ORIGIN_WHITELIST = (
 CORS_ALLOW_CREDENTIALS = True
 
 MEDIA_ROOT = os.path.join(BASE_DIR, '../backendStorage')
-MEDIA_URL = '/media/'
+MEDIA_URL = '/backendStorage/'

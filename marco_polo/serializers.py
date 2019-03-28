@@ -122,6 +122,12 @@ class StrategyVoteSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class StockSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Stock
+        fields = '__all__'
+
+
 class UniverseSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -136,6 +142,8 @@ class UsedUniverseSerializer(serializers.ModelSerializer):
 
 
 class BacktestSerializer(serializers.ModelSerializer):
+    universe = UsedUniverseSerializer(read_only=True)
+    strategy = StrategySerializer(read_only=True)
     class Meta:
         model = Backtest
         fields = '__all__'
@@ -144,11 +152,4 @@ class BacktestSerializer(serializers.ModelSerializer):
 class BacktestTradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = BacktestTrade
-        fields = '__all__'
-
-
-class StockSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Stock
         fields = '__all__'
