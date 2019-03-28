@@ -385,17 +385,42 @@ Response:
 
 ```
 #### GET /api/algorithm/
-##### returns an array of all strategies 
+##### returns an array of all strategies with the best backtest for each 
 Response:
 ```json
 [
     {
-        "id": 34,
-        "name": "mean_reversion",
-        "description": "mean reversion",
-        "user": 5,
-        "created_at": "2019-03-23T19:11:36.123175Z",
-        "approved": false
+        "algo_details": {
+            "name": "mean_reversion",
+            "description": "mean reversion",
+            "user": 5,
+            "created_at": "2019-03-23T19:11:36.123175Z",
+            "approved": false
+        },
+        "best_backtest": {
+            "id": 35,
+            "strategy_id": 34,
+            "universe_id": 39,
+            "user_id": 5,
+            "complete": true,
+            "successful": true,
+            "start_date": "2017-01-01T00:00:00Z",
+            "end_date": "2019-03-01T00:00:00Z",
+            "initial_cash": 1000,
+            "end_cash": 2636.5377,
+            "sharpe": 2.94,
+            "created_at": "2019-03-27T15:49:15.083884Z"
+        }
+    },
+    {
+        "algo_details": {
+            "name": "testalgo",
+            "description": "algoDescription",
+            "user": 13,
+            "created_at": "2019-03-27T21:23:48.064777Z",
+            "approved": false
+        },
+        "best_backtest": ""
     }
 ]
 ```
