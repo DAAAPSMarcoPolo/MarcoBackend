@@ -138,7 +138,7 @@ class LoginFactorAPI(generics.GenericAPIView):
             print("here")
             return Response({
                 "message": "code correct",
-                "token": AuthToken.objects.create(user),
+                "token": AuthToken.objects.create(user)[1],
                 "isAdmin": isAdmin
             })
         else:
