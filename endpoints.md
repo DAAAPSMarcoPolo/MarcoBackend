@@ -182,3 +182,335 @@ Response:
     "secret_key": "dhaukri3uqewd2fiu"
 }
 ```
+
+
+## Backtest
+#### POST /api/backtest/
+##### runs a backtest.  A response will be given to the front end right away and the user will receive a text after the backtest finishes running
+Send:
+```json
+{
+	"strategy": 34,
+	"universe": 65,
+	"start_date": "2018-1-1",
+	"end_date": "2019-3-1",
+	"initial_funds": 2000
+}
+```
+Response:
+```
+"backtest is running"
+```
+#### GET /api/backtest/\<backtestId\>
+##### returns one backtest object
+Response:
+```json
+{
+    "backtest": {
+        "id": 19,
+        "universe": {
+            "id": 23,
+            "name": "Universe for quick backtest",
+            "updated": "2019-03-27T14:49:28.515380Z",
+            "user": 5,
+            "stocks": [
+                "BIOC",
+                "ALDX",
+                "BA",
+                "SAEX",
+                "TSLA",
+                "MAXR",
+                "DGAZ",
+                "UGAZ",
+                "MSFT"
+            ]
+        },
+        "strategy": {
+            "id": 34,
+            "name": "mean_reversion",
+            "description": "mean reversion",
+            "strategy_file": "http://localhost:8000/backendStorage/uploads/algos/mean_reversion.py",
+            "approved": false,
+            "live": false,
+            "created_at": "2019-03-23T19:11:36.123175Z",
+            "user": 5
+        },
+        "complete": true,
+        "start_date": "2018-01-01T00:00:00Z",
+        "end_date": "2019-03-01T00:00:00Z",
+        "initial_cash": 2000,
+        "end_cash": 4093.0496,
+        "sharpe": 2.89,
+        "created_at": "2019-03-27T14:49:28.912147Z",
+        "user": 5
+    },
+    "trades": [
+        {
+            "id": 443,
+            "backtest_id": 19,
+            "symbol": "DGAZ",
+            "buy_time": "2019-03-27T14:49:38.528675Z",
+            "sell_time": "2019-03-27T14:49:38.528736Z",
+            "buy_price": 24.65,
+            "sell_price": 32.15,
+            "qty": 32
+        },
+        {
+            "id": 444,
+            "backtest_id": 19,
+            "symbol": "MSFT",
+            "buy_time": "2019-03-27T14:49:38.674042Z",
+            "sell_time": "2019-03-27T14:49:38.674064Z",
+            "buy_price": 87.66,
+            "sell_price": 88.2,
+            "qty": 88
+        }
+    ]
+}
+```
+
+#### GET /api/backtest/
+##### returns an aray of all completed backtests
+Response:
+```json
+[
+    {
+        "backtest": {
+            "id": 19,
+            "universe": {
+                "id": 23,
+                "name": "Universe for quick backtest",
+                "updated": "2019-03-27T14:49:28.515380Z",
+                "user": 5,
+                "stocks": [
+                    "BIOC",
+                    "ALDX",
+                    "BA",
+                    "SAEX",
+                    "TSLA",
+                    "MAXR",
+                    "DGAZ",
+                    "UGAZ",
+                    "MSFT"
+                ]
+            },
+            "strategy": {
+                "id": 34,
+                "name": "mean_reversion",
+                "description": "mean reversion",
+                "strategy_file": "http://localhost:8000/backendStorage/uploads/algos/mean_reversion.py",
+                "approved": false,
+                "live": false,
+                "created_at": "2019-03-23T19:11:36.123175Z",
+                "user": 5
+            },
+            "complete": true,
+            "start_date": "2018-01-01T00:00:00Z",
+            "end_date": "2019-03-01T00:00:00Z",
+            "initial_cash": 2000,
+            "end_cash": 4093.0496,
+            "sharpe": 2.89,
+            "created_at": "2019-03-27T14:49:28.912147Z",
+            "user": 5
+        },
+        "trades": [
+            {
+                "id": 443,
+                "backtest_id": 19,
+                "symbol": "DGAZ",
+                "buy_time": "2019-03-27T14:49:38.528675Z",
+                "sell_time": "2019-03-27T14:49:38.528736Z",
+                "buy_price": 24.65,
+                "sell_price": 32.15,
+                "qty": 32
+            },
+            {
+                "id": 444,
+                "backtest_id": 19,
+                "symbol": "MSFT",
+                "buy_time": "2019-03-27T14:49:38.674042Z",
+                "sell_time": "2019-03-27T14:49:38.674064Z",
+                "buy_price": 87.66,
+                "sell_price": 88.2,
+                "qty": 88
+            }
+        ]
+    }
+]
+```
+
+#### GET /api/backtest/\<backtestId\>
+##### returns an array of backtest objects containing all backtests run
+Response:
+```json
+[
+{
+    "backtest": {
+        "id": 16,
+        "complete": true,
+        "start_date": "2018-01-01T00:00:00Z",
+        "end_date": "2019-03-01T00:00:00Z",
+        "initial_cash": 2000,
+        "end_cash": 4093.0496,
+        "sharpe": 2.89,
+        "created_at": "2019-03-27T00:18:08.572453Z",
+        "strategy": 34,
+        "universe": 20,
+        "user": 5
+    },
+    "trades": [
+        {
+            "id": 207,
+            "backtest_id": 16,
+            "symbol": "DGAZ",
+            "buy_time": "2019-03-27T00:18:17.251256Z",
+            "sell_time": "2019-03-27T00:18:17.251316Z",
+            "buy_price": 24.65,
+            "sell_price": 32.15,
+            "qty": 32
+        },
+        {
+            "id": 208,
+            "backtest_id": 16,
+            "symbol": "MSFT",
+            "buy_time": "2019-03-27T00:18:17.398419Z",
+            "sell_time": "2019-03-27T00:18:17.398472Z",
+            "buy_price": 87.66,
+            "sell_price": 88.2,
+            "qty": 88
+        }
+    ]
+}
+]
+
+```
+#### GET /api/algorithm/
+##### returns an array of all strategies with the best backtest for each 
+Response:
+```json
+[
+    {
+        "algo_details": {
+            "name": "mean_reversion",
+            "description": "mean reversion",
+            "user": 5,
+            "created_at": "2019-03-23T19:11:36.123175Z",
+            "approved": false
+        },
+        "best_backtest": {
+            "id": 35,
+            "strategy_id": 34,
+            "universe_id": 39,
+            "user_id": 5,
+            "complete": true,
+            "successful": true,
+            "start_date": "2017-01-01T00:00:00Z",
+            "end_date": "2019-03-01T00:00:00Z",
+            "initial_cash": 1000,
+            "end_cash": 2636.5377,
+            "sharpe": 2.94,
+            "created_at": "2019-03-27T15:49:15.083884Z"
+        }
+    },
+    {
+        "algo_details": {
+            "name": "testalgo",
+            "description": "algoDescription",
+            "user": 13,
+            "created_at": "2019-03-27T21:23:48.064777Z",
+            "approved": false
+        },
+        "best_backtest": ""
+    }
+]
+```
+
+#### GET /api/algorithm/\<strategyId\>
+##### returns an array of strategy specified by strategyid 
+Response:
+```json
+{
+    "algo_details": {
+        "name": "mean_reversion",
+        "description": "mean reversion",
+        "user": 5,
+        "created_at": "2019-03-23T19:11:36.123175Z",
+        "approved": false
+    },
+    "bt_list": [
+        {
+            "id": 37,
+            "strategy_id": 34,
+            "universe_id": 41,
+            "user_id": 5,
+            "complete": false,
+            "successful": false,
+            "start_date": "2010-01-01T00:00:00Z",
+            "end_date": "2019-03-01T00:00:00Z",
+            "initial_cash": 1000000,
+            "end_cash": 1000000,
+            "sharpe": -1,
+            "created_at": "2019-03-27T15:49:22.972281Z"
+        },
+        {
+            "id": 35,
+            "strategy_id": 34,
+            "universe_id": 39,
+            "user_id": 5,
+            "complete": true,
+            "successful": true,
+            "start_date": "2017-01-01T00:00:00Z",
+            "end_date": "2019-03-01T00:00:00Z",
+            "initial_cash": 1000,
+            "end_cash": 2636.5377,
+            "sharpe": 2.94,
+            "created_at": "2019-03-27T15:49:15.083884Z"
+        }
+    ]
+}
+```
+
+## Strategy Backtest
+#### GET /api/strategybacktests/\<StrategyId\>
+##### This function will return an array of all backtests run for a specified strategy
+Response:
+```json
+[
+{
+    "backtest": {
+        "id": 16,
+        "complete": true,
+        "start_date": "2018-01-01T00:00:00Z",
+        "end_date": "2019-03-01T00:00:00Z",
+        "initial_cash": 2000,
+        "end_cash": 4093.0496,
+        "sharpe": 2.89,
+        "created_at": "2019-03-27T00:18:08.572453Z",
+        "strategy": 34,
+        "universe": 20,
+        "user": 5
+    },
+    "trades": [
+        {
+            "id": 207,
+            "backtest_id": 16,
+            "symbol": "DGAZ",
+            "buy_time": "2019-03-27T00:18:17.251256Z",
+            "sell_time": "2019-03-27T00:18:17.251316Z",
+            "buy_price": 24.65,
+            "sell_price": 32.15,:
+            "qty": 32
+        },
+        {
+            "id": 208,
+            "backtest_id": 16,
+            "symbol": "MSFT",
+            "buy_time": "2019-03-27T00:18:17.398419Z",
+            "sell_time": "2019-03-27T00:18:17.398472Z",
+            "buy_price": 87.66,
+            "sell_price": 88.2,
+            "qty": 88
+        }
+    ]
+}
+]

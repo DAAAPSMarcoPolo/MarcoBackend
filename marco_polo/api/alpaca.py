@@ -19,13 +19,16 @@ class SeedAPI(generics.GenericAPIView):
 
         assets = api.list_assets()
         tradable_assets = [x for x in assets if x.tradable]
+        tradable_assets = [x.symbol for x in tradable_assets]
+        response = {"assets": tradable_assets}
+        print(tradable_assets)
         print(len(tradable_assets))
-        stocks = []
-        for stock in tradable_assets:
-            data = {'symbol': stock.symbol,
-                    'exchange:': stock.exchange}
-            stock = Stock.objects.create(symbol=stock.symbol, exchange=stock.exchange)
-            stocks.append(stock)
-
-        [stock.save() for stock in stocks]
-        return Response('created', status=status.HTTP_201_CREATED)
+        # stocks = []
+        # for stock in tradable_assets:
+        #     data = {'symbol': stock.symbol,
+        #             'exchange:': stock.exchange}
+        #     stock = Stock.objects.create(symbol=stock.symbol, exchange=stock.exchange)
+        #     stocks.append(stock)
+        #
+        # [stock.save() for stock in stocks]
+        return Response(response, status=status.HTTP_201_CREATED)

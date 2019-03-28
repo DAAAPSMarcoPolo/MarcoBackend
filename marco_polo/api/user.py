@@ -9,8 +9,8 @@ from twilio.rest import Client
 
 
 class PictureAPI(generics.GenericAPIView):
-    #authentication_classes = (TokenAuthentication,)
-    #permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
         try:
@@ -21,7 +21,7 @@ class PictureAPI(generics.GenericAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(profile.avatar.url, status=status.HTTP_200_OK)
 
-    def put(self, request):
+    def post(self, request):
         try:
             user = User.objects.get(username=self.request.user.username)
             profile = UserProfile.objects.get(user=user)
@@ -31,7 +31,7 @@ class PictureAPI(generics.GenericAPIView):
         profile.avatar = request.data['avatar']
         user.save()
         profile.save()
-        return Response(status=status.HTTP_200_OK)
+        return Response(profile.avatar.url, status=status.HTTP_200_OK)
 
 
 class UserSettingsAPI(generics.GenericAPIView):
@@ -56,7 +56,6 @@ class UserSettingsAPI(generics.GenericAPIView):
         user.first_name = request.data['first_name']
         user.last_name = request.data['last_name']
         profile.phone_number = request.data['phone_number']
-
         # TODO save password
         if 'new_password' in request.data:
             password = request.data['password']

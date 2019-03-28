@@ -2,27 +2,22 @@ from __future__ import division
 import math
 import statistics
 import logging
-import time
-import sys
 from datetime import datetime, timedelta
 import pandas as pd
 import importlib
-import pickle
 import pyclbr
-
-
-from market_data import DataFetcher
-from defaultUniverses.sp500 import Universe
-from test_data import Test
-
-# from strategies.strategy_template import Strategy
+from marco_polo.backtesting.market_data import DataFetcher
+from marco_polo.backtesting.defaultUniverses.sp500 import Universe
+from marco_polo.backtesting.test_data import Test
+import sys
 
 class Backtest:
 
     risk_free_return = .02
 
-    def __init__(self, strategy_name, initial_funds, universe, start_date, end_date):
-        self.strategy = strategy_name
+    def __init__(self, strategy, initial_funds, universe, start_date, end_date):
+        self.strategy = strategy
+        self.strategy_name = strategy
         self.initial_funds = float(initial_funds)
         self.current_funds = float(initial_funds)
         self.daily_returns = []
@@ -32,13 +27,18 @@ class Backtest:
         self.open_positions = {}
         self.trades = []
         self.universe_data = {}
+        self.running = True
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO)
 
     def import_strategy(self):
+        sys.path.append("../backendStorage")
+
         try:
-            strategy = importlib.import_module('strategies.' + self.strategy)
-            module_info = pyclbr.readmodule('strategies.' + self.strategy)
+            from os import listdir
+            from os.path import isfile, join
+            strategy = importlib.import_module('uploads.algos.'+self.strategy)
+            module_info = pyclbr.readmodule('uploads.algos.'+self.strategy)
 
             class_name = None
             for item in module_info.values():
@@ -49,7 +49,10 @@ class Backtest:
 
         except ImportError as e:
             self.logger.error(e)
-            return [False, 'Strategy not found']
+            return [False, e]
+
+        return [True, 'imported successfully']
+
 
     # Validation Script
     def validate_strategy(self):
@@ -74,13 +77,13 @@ class Backtest:
         except:
             error = True
             self.logger.error('add_tech_ind() not implemented correctly')
-            return [False, 'add_tech_ind() not implemented correctly']
+            return [False, 'add_tech_ind() not implemented correctly.']
 
         if new_price_map:
             daily_data = tester.create_daily_data(new_price_map)
         else:
             self.logger.info('add_tech_ind() must be fixed before the rest of the functions are validated')
-            return [False, 'add_tech_ind() must be fixed before the rest of the functions are validated']
+            return [False, 'add_tech_ind() must be fixed before the rest of the functions are validated.']
             sys.exit(1)
         # Test rank_stocks()
         try:
@@ -89,7 +92,7 @@ class Backtest:
         except Exception as e:
             error = True
             self.logger.error('rank_stocks() not implemented correctly')
-            return [False, 'rank_stocks() not implemented correctly']
+            return [False, 'rank_stocks() not implemented correctly.']
 
         # Test stocks_to_sell()
         try:
@@ -99,7 +102,7 @@ class Backtest:
         except:
             error = True
             self.logger.error('stocks_to_sell() not implemented correctly')
-            return [False, 'stocks_to_sell() not implemented correctly']
+            return [False, 'stocks_to_sell() not implemented correctly.']
 
         # Test stocks_to_buy()
         try:
@@ -110,7 +113,7 @@ class Backtest:
         except Exception as e:
             error = True
             self.logger.error('stocks_to_buy() not implemented correctly')
-            return [False, 'stocks_to_buy() not implemented correctly']
+            return [False, 'stocks_to_buy() not implemented correctly.']
 
         if error:
             self.logger.info('Strategy does not conform to standards')
@@ -134,7 +137,7 @@ class Backtest:
             return [True, 'Successfully fetched data']
         else:
             self.logger.error('Start and end date must be less than 1000 days apart')
-            return [False, 'Start and end date must be less than 1000 days apart']
+            return [False, 'Start and end date must be less than 1000 days apart.']
 
     def buy(self, symbol, entry_price, entry_time, allocated_funds):
         # buy the stock if we do not have it in our portfolio
@@ -224,16 +227,19 @@ class Backtest:
     def run(self):
         result = self.import_strategy()
         if not result[0]:
+            self.running = False
             return result
 
         result = self.set_historical_data()
         if not result[0]:
+            self.running = False
             return result
 
         self.universe_data = self.strategy.add_tech_ind(self.universe_data)
         result = self.simulate()
+        self.running = False
 
-        return [True, 'Backtest was successfully ran ']
+        return [True, 'Backtest has ran successfully.']
 
 
 class Position:
@@ -251,10 +257,10 @@ class Position:
 class Trade:
     def __init__(self, position, exit_time, exit_price):
         self.symbol = position.symbol
-        self.entry_time = position.entry_price
+        self.entry_time = position.entry_time
         self.exit_time = exit_time
         self.entry_price = position.entry_price
-        self.exit_price = exit_time
+        self.exit_price = exit_price
         self.qty = position.qty
 
     @property
@@ -274,6 +280,7 @@ class BTStats:
     @property
     def summary(self):
         return {
+            'end_funds': self.bt.current_funds,
             'profit': self.realized_profit,
             'pct_return': self.pct_return,
             'sharpe': self.sharpe
@@ -337,29 +344,29 @@ class PrintColors:
     UNDERLINE = '\033[4m'
 
 
-# Demo Backtests
-
-# Correct Strategy
-bt = Backtest('mean_reversion', 1000, Universe, '2018-1-1', '2019-2-13')
-bt.run()
-btStats = BTStats(bt)
-time.sleep(.1)
-
-print(PrintColors.OKGREEN)
-print("Initial Funds: ${}".format(round(bt.initial_funds, 2)))
-print("End Funds: ${}".format(round(bt.current_funds, 2)))
-print("Profit: ${}".format(btStats.realized_profit))
-print("% Return: {}%".format(round(btStats.pct_return*100,2)))
-print("Sharpe Ratio: {}".format(btStats.sharpe))
-print(PrintColors.ENDC)
-
-time.sleep(3)
-print("Now Demoing algorithm validation script...")
-
-# Strategy Val Test 1
-bt = Backtest('bad_strategy1', 1000, Universe, '2018-1-1', '2019-2-13')
-bt.run()
-
-# Strategy Val Test 2
-bt = Backtest('bad_strategy2', 1000, Universe, '2018-1-1', '2019-2-13')
-bt.run()
+# # Demo Backtests
+#
+# # Correct Strategy
+# bt = Backtest('mean_reversion', 1000, Universe, '2018-1-1', '2019-2-13')
+# bt.run()
+# btStats = BTStats(bt)
+# time.sleep(.1)
+#
+# print(PrintColors.OKGREEN)
+# print("Initial Funds: ${}".format(round(bt.initial_funds, 2)))
+# print("End Funds: ${}".format(round(bt.current_funds, 2)))
+# print("Profit: ${}".format(btStats.realized_profit))
+# print("% Return: {}%".format(round(btStats.pct_return*100,2)))
+# print("Sharpe Ratio: {}".format(btStats.sharpe))
+# print(PrintColors.ENDC)
+#
+# time.sleep(3)
+# print("Now Demoing algorithm validation script...")
+#
+# # Strategy Val Test 1
+# bt = Backtest('bad_strategy1', 1000, Universe, '2018-1-1', '2019-2-13')
+# bt.run()
+#
+# # Strategy Val Test 2
+# bt = Backtest('bad_strategy2', 1000, Universe, '2018-1-1', '2019-2-13')
+# bt.run()
