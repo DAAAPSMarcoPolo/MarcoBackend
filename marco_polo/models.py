@@ -1,15 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import User
 from fernet_fields import EncryptedTextField
-import os 
+import os
 # Create your models here.
+
 
 def get_image_path(instance, filename):
     return os.path.join('photos', str(instance.id), filename)
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', primary_key=True)
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='profile', primary_key=True)
     firstlogin = models.BooleanField(default=True)
     code = models.CharField(max_length=6)
     phone_number = models.CharField(max_length=20)
@@ -28,17 +30,11 @@ class Strategy(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.TextField(max_length=None, null=True)
     description = models.TextField(max_length=None, null=True)
-    strategy_file = models.FileField(upload_to='uploads/algos/', blank=True, null=True)
+    strategy_file = models.FileField(
+        upload_to='uploads/algos/', blank=True, null=True)
     approved = models.BooleanField(default=False)
     live = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
-
-
-class StrategyVote(models.Model):
-    id = models.AutoField(primary_key=True)
-    strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    vote = models.BooleanField(default=False)
 
 
 class Stock(models.Model):
@@ -65,7 +61,8 @@ class UsedUniverse(models.Model):
 class Backtest(models.Model):
     id = models.AutoField(primary_key=True)
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
-    universe = models.OneToOneField(UsedUniverse, on_delete=models.CASCADE, related_name='universe')
+    universe = models.OneToOneField(
+        UsedUniverse, on_delete=models.CASCADE, related_name='universe')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     complete = models.BooleanField(default=False)
     successful = models.BooleanField(default=True)
@@ -77,6 +74,14 @@ class Backtest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
 
 
+class BacktestVote(models.Model):
+    id = models.AutoField(primary_key=True)
+    backtest = models.ForeignKey(
+        Backtest, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    vote = models.BooleanField(default=False)
+
+
 class BacktestTrade(models.Model):
     id = models.AutoField(primary_key=True)
     backtest = models.ForeignKey(Backtest, on_delete=models.CASCADE)
@@ -86,10 +91,3 @@ class BacktestTrade(models.Model):
     buy_price = models.FloatField(null=False)
     sell_price = models.FloatField(null=False)
     qty = models.IntegerField(null=False)
-
-
-
-
-
-
-
