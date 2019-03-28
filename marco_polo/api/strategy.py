@@ -6,6 +6,7 @@ from marco_polo.models import Backtest
 from marco_polo.serializers import StrategySerializer
 from django.contrib.auth.models import User
 from knox.auth import TokenAuthentication
+from django.db.models import Max
 
 
 class AlgorithmAPI(generics.GenericAPIView):
@@ -53,9 +54,23 @@ class StrategyAPI(generics.GenericAPIView):
                 return Response("Could not get the details for that algo", status=status.HTTP_400_BAD_REQUEST)
         # GET list of algos
         try:
-            all_strats = Strategy.objects.all().values(
-                'id', 'name', 'description', 'user', 'created_at', 'approved')
-            return Response(all_strats, status=status.HTTP_200_OK)
+            all_strats = Strategy.objects.all()
+            data = []
+            yo = {}
+            count = 0
+            for strat in all_strats:
+                yo = {}
+                set = strat.backtest_set.all().order_by('-sharpe').values()
+                best_backtest = ""
+                if set.count() > 0:
+                    best_backtest = set[0]
+                    strat_id = best_backtest["strategy_id"]
+                    yo = Strategy.objects.values('name', 'description', 'user', 'created_at', 'approved').get(id=strat_id)
+                else: 
+                    yo = all_strats.values('name', 'description', 'user', 'created_at', 'approved')[count]
+                data.append({'algo_details' : yo, 'best_backtest' : best_backtest})
+                count = count + 1
+            return Response(data , status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
             return Response("Could not get all of the algos", status=status.HTTP_400_BAD_REQUEST)
