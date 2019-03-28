@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from knox.auth import TokenAuthentication
 from marco_polo.backtesting.backtest import Backtest as BT, BTStats
-from marco_polo.models import Universe, Backtest, Strategy, UsedUniverse, Stock, User, BacktestTrade
+from marco_polo.models import Universe, Backtest, Strategy, UsedUniverse, Stock, User, BacktestTrade, BacktestVote
 from marco_polo.serializers import UniverseSerializer, UsedUniverseSerializer, BacktestSerializer, BacktestTradeSerializer
 import threading
 from django.conf import settings
@@ -162,5 +162,24 @@ class BacktestAPI(generics.GenericAPIView):
 class BacktestVoteAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
-        
+
+    # ask to go live    
+    def post(self, request, *args, **kwargs):
+        try:
+            bt_id = self.kwargs["id"]
+            # check if votes have already been created
+            bt_vote = BacktestVote.objects.get(backtest=bt_id)
+            if bt_vote:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            # create vote for each user
+            users = User.objects.values('id')
+            for user_id in users:
+                BacktestVote.objects.create(user=user_id,backtest=bt_id)
+            return Response(staus=status.HTTP_201_CREATED)
+        # no "id" supplied
+        except Exception as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+    
+    # submit vote
+
 
