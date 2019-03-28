@@ -1,7 +1,7 @@
 Django
 djangorestframework
 django-cors-headers
-django-rest-knox
+django-rest-knox==3.6.0
 psycopg2
 Pillow
 requests
