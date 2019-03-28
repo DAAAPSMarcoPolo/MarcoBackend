@@ -49,7 +49,7 @@ class Backtest:
 
         except ImportError as e:
             self.logger.error(e)
-            return [False, 'Strategy not found.']
+            return [False, e]
 
         return [True, 'imported successfully']
 
