@@ -2,8 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.utils.crypto import get_random_string
-from .models import UserProfile, AlpacaAPIKeys, Strategy, StrategyVote, Universe, UsedUniverse, Backtest, BacktestTrade, Stock
-
+from .models import UserProfile, AlpacaAPIKeys, Strategy, BacktestVote, Universe, UsedUniverse, Backtest, BacktestTrade, Stock
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
@@ -18,7 +17,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
                                         validated_data['password'])
 
         code = get_random_string(length=6, allowed_chars='1234567890')
-        UserProfile.objects.create(user=user,code=code)
+        UserProfile.objects.create(user=user, code=code)
         return user
 
 
@@ -52,7 +51,8 @@ class LoginUserSerializer(serializers.Serializer):
         user = authenticate(**data)
         if user and user.is_active:
             return user
-        raise serializers.ValidationError("Unable to log in with provided credentials.")
+        raise serializers.ValidationError(
+            "Unable to log in with provided credentials.")
 
 
 class FirstLoginSerializer(serializers.Serializer):
@@ -68,40 +68,41 @@ class FirstLoginSerializer(serializers.Serializer):
         user = authenticate(**data)
         if user and user.is_active:
             return user
-        raise serializers.ValidationError("Unable to log in with provided credentials.")
+        raise serializers.ValidationError(
+            "Unable to log in with provided credentials.")
 
 
 class UpdateAuthUserSerializer(serializers.Serializer):
-  first_name = serializers.CharField()
-  last_name = serializers.CharField()
-  username = serializers.CharField()
-  password = serializers.CharField(required=False)
-  new_password = serializers.CharField(required=False)
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    username = serializers.CharField()
+    password = serializers.CharField(required=False)
+    new_password = serializers.CharField(required=False)
 
-  class Meta:
-    model = User
-    fields = ('first_name', 'last_name', 'username', 'password')
-    extra_kwargs = {'password': {'write_only': True}}
-  
-  def update(self, instance, validated_data):
-    instance.first_name = validated_data.get('first_name')
-    instance.last_name = validated_data.get('last_name')
-    instance.username = validated_data.get('username')
-    new_pass = validated_data.get('new_password')
-    old_pass = validated_data.get('password')
-    if new_pass:
-      if not instance.check_password(validated_data.get('password')):
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'username', 'password')
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data.get('first_name')
+        instance.last_name = validated_data.get('last_name')
+        instance.username = validated_data.get('username')
+        new_pass = validated_data.get('new_password')
+        old_pass = validated_data.get('password')
+        if new_pass:
+            if not instance.check_password(validated_data.get('password')):
+                instance.save()
+                return Response({"message": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
+            instance.set_password(new_pass)
         instance.save()
-        return Response({"message": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
-      instance.set_password(new_pass)
-    instance.save()
-    return instance
+        return instance
 
 
 class UpdateProfileSerializer(serializers.Serializer):
-  class Meta:
-    model = UserProfile
-    fields = ('firstlogin', 'avatar', 'phone_number')
+    class Meta:
+        model = UserProfile
+        fields = ('firstlogin', 'avatar', 'phone_number')
 
 
 class AlpacaKeysSerializer(serializers.ModelSerializer):
@@ -116,9 +117,9 @@ class StrategySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class StrategyVoteSerializer(serializers.ModelSerializer):
+class BacktestVoteSerializer(serializers.ModelSerializer):
     class Meta:
-        model = StrategyVote
+        model = BacktestVote
         fields = '__all__'
 
 
