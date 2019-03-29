@@ -6,6 +6,11 @@ from datetime import datetime, timedelta
 import pandas as pd
 import importlib
 import pyclbr
+import sys
+sys.path.append('.../..')
+#sys.path.append('../backendStorage/uploads/algos')
+#import marco_polo.backendStorage.uploads.algos
+
 from marco_polo.backtesting.market_data import DataFetcher
 from marco_polo.backtesting.defaultUniverses.sp500 import Universe
 from marco_polo.backtesting.test_data import Test
@@ -186,6 +191,7 @@ class Backtest:
         return data_by_date
 
     def manage_portfolio(self, daily_data, curr_date):
+        #print (curr_date)
         curr_portfolio = []
 
         for position in self.open_positions:
