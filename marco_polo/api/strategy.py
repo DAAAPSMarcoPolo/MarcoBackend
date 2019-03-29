@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from marco_polo.models import Strategy
 from marco_polo.models import Backtest
+from marco_polo.models import BacktestVote
 from marco_polo.serializers import StrategySerializer
 from django.contrib.auth.models import User
 from knox.auth import TokenAuthentication
@@ -56,19 +57,19 @@ class StrategyAPI(generics.GenericAPIView):
         try:
             all_strats = Strategy.objects.all()
             data = []
-            yo = {}
             count = 0
             for strat in all_strats:
-                yo = {}
+                algo_dets = all_strats.values('id', 'name', 'description', 'user', 'created_at', 'approved')[count]
                 set = strat.backtest_set.all().order_by('-sharpe').values()
-                best_backtest = ""
+                best_backtest = False
                 if set.count() > 0:
                     best_backtest = set[0]
-                    strat_id = best_backtest["strategy_id"]
-                    yo = Strategy.objects.values('name', 'description', 'user', 'created_at', 'approved').get(id=strat_id)
-                else: 
-                    yo = all_strats.values('name', 'description', 'user', 'created_at', 'approved')[count]
-                data.append({'algo_details' : yo, 'best_backtest' : best_backtest})
+                    bt_id = best_backtest['id']
+                    best_votes = BacktestVote.objects.filter(backtest=bt_id).values('user', 'vote')
+                    if not best_votes:
+                        best_votes = None
+                    # TODO check if there has been a vote
+                data.append({'algo_details' : algo_dets, 'best_backtest' : best_backtest, 'best_votes': best_votes})
                 count = count + 1
             return Response(data , status=status.HTTP_200_OK)
         except Exception as e:
