@@ -27,13 +27,16 @@ class StrategyBacktests(generics.GenericAPIView):
                     backtest=backtest.id).values()
                 votes = BacktestVote.objects.filter(
                     backtest=id).values('user', 'vote')
-                backtest_details = {
+                bt = BacktestSerializer(backtest, context=self.get_serializer_context()).data
+                bt['pct_gain'] = (bt['end_cash']-bt['initial_cash']) / bt['initial_cash']
+                trades = BacktestTrade.objects.filter(backtest=backtest.id).values()
+                backest_details = {
                     'backtest': bt,
                     'trades': trades,
                     'votes': votes
                 }
 
-                backtests.append(backtest_details)
+                backtests.append(backest_details)
 
             return Response(backtests, status=status.HTTP_200_OK)
 
