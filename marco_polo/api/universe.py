@@ -24,7 +24,7 @@ class UniverseAPI(generics.GenericAPIView):
             print(e)
             return Response("Could not create new universe", status=status.HTTP_400_BAD_REQUEST)
 
-        stock_list = request.data["universe"]
+        stock_list = list(set(request.data["universe"]))
         stocks_to_add = []
         for stock in stock_list:
             try:
@@ -58,14 +58,17 @@ class UniverseAPI(generics.GenericAPIView):
 
         try:
             id = self.kwargs["id"]
+            print(id)
             universe = Universe.objects.get(id=id)
+            print(universe)
             stock_list = request.data["universe"]
+            #stock_list = list(set(stock_list))
             universe.stocks.clear()
             universe.stocks.add(*stock_list)
             response = UniverseSerializer(universe, context=self.get_serializer_context()).data
 
             return Response(response, status=status.HTTP_200_OK)
 
-        except:
-            print("no matching universe found")
+        except Exception as e:
+            print(e)
             return Response("No universe with this ID was found", status=status.HTTP_200_OK)
