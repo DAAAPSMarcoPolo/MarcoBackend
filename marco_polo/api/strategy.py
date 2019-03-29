@@ -59,19 +59,23 @@ class StrategyAPI(generics.GenericAPIView):
             data = []
             count = 0
             for strat in all_strats:
-                algo_dets = all_strats.values('id', 'name', 'description', 'user', 'created_at', 'approved')[count]
+                algo_dets = all_strats.values(
+                    'id', 'name', 'description', 'user', 'created_at', 'approved')[count]
                 set = strat.backtest_set.all().order_by('-sharpe').values()
                 best_backtest = False
+                best_votes = None
                 if set.count() > 0:
                     best_backtest = set[0]
                     bt_id = best_backtest['id']
-                    best_votes = BacktestVote.objects.filter(backtest=bt_id).values('user', 'vote')
+                    best_votes = BacktestVote.objects.filter(
+                        backtest=bt_id).values('user', 'vote')
                     if not best_votes:
                         best_votes = None
                     # TODO check if there has been a vote
-                data.append({'algo_details' : algo_dets, 'best_backtest' : best_backtest, 'best_votes': best_votes})
+                data.append({'algo_details': algo_dets,
+                             'best_backtest': best_backtest, 'best_votes': best_votes})
                 count = count + 1
-            return Response(data , status=status.HTTP_200_OK)
+            return Response(data, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
             return Response("Could not get all of the algos", status=status.HTTP_400_BAD_REQUEST)
