@@ -191,6 +191,7 @@ class Backtest:
         return data_by_date
 
     def manage_portfolio(self, daily_data, curr_date):
+        #print (curr_date)
         curr_portfolio = []
 
         for position in self.open_positions:
