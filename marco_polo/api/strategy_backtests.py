@@ -19,6 +19,7 @@ class StrategyBacktests(generics.GenericAPIView):
             backtest_list = Backtest.objects.filter(strategy=strategy, successful=True).order_by('-created_at')
             for backtest in backtest_list:
                 bt = BacktestSerializer(backtest, context=self.get_serializer_context()).data
+                bt['pct_gain'] = (bt['end_cash']-bt['initial_cash']) / bt['initial_cash']
                 trades = BacktestTrade.objects.filter(backtest=backtest.id).values()
                 backest_details = {
                     'backtest': bt,

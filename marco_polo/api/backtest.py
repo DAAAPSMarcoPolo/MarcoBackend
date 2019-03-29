@@ -136,6 +136,8 @@ class BacktestAPI(generics.GenericAPIView):
             id = self.kwargs["id"]
             backtest = Backtest.objects.get(id=id)
             backtest = BacktestSerializer(backtest, context=self.get_serializer_context()).data
+            backtest['pct_gain'] = (backtest['end_cash'] - backtest['initial_cash']) / backtest['initial_cash']
+            print(backtest)
             trades = BacktestTrade.objects.filter(backtest=id).values()
             backest_details = {
                 'backtest': backtest,
@@ -149,6 +151,7 @@ class BacktestAPI(generics.GenericAPIView):
             backtest_list = Backtest.objects.filter(successful=True).order_by('-created_at')
             for backtest in backtest_list:
                 bt = BacktestSerializer(backtest, context=self.get_serializer_context()).data
+                bt['pct_gain'] = (bt['end_cash']-bt['initial_cash']) / bt['initial_cash']
                 trades = BacktestTrade.objects.filter(backtest=backtest.id).values()
                 backest_details = {
                     'backtest': bt,
