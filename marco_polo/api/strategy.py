@@ -3,9 +3,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from marco_polo.models import Strategy
 from marco_polo.models import Backtest
+from marco_polo.models import BacktestVote
 from marco_polo.serializers import StrategySerializer
 from django.contrib.auth.models import User
 from knox.auth import TokenAuthentication
+from django.db.models import Max
 
 
 class AlgorithmAPI(generics.GenericAPIView):
@@ -27,21 +29,21 @@ class AlgorithmAPI(generics.GenericAPIView):
             return Response("Could not create new strategy", status=status.HTTP_400_BAD_REQUEST)
 
 
-# /algorithms/<algoID>
+# /algorithm/<id>
 class StrategyAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
         # GET single algorithm details
-        if 'algoID' in kwargs:
+        if 'id' in kwargs:
             try:
-                algoID = kwargs['algoID']
-                print(algoID)
+                id = self.kwargs['id']
+                print(id)
                 algo = Strategy.objects.values(
-                    'name', 'description', 'user', 'created_at', 'approved').get(id=algoID)
+                    'name', 'description', 'user', 'created_at', 'approved').get(id=id)
                 backtest_list = Backtest.objects.filter(
-                    strategy=algoID)
+                    strategy=id).values()
                 data = {
                     'algo_details': algo,
                     'bt_list': backtest_list
@@ -53,11 +55,23 @@ class StrategyAPI(generics.GenericAPIView):
                 return Response("Could not get the details for that algo", status=status.HTTP_400_BAD_REQUEST)
         # GET list of algos
         try:
-            all_strats = Strategy.objects.all().values(
-                'id', 'name', 'description', 'user', 'created_at', 'approved')
-            for strat in all_strats: 
-                print(strat)
-            return Response(all_strats, status=status.HTTP_200_OK)
+            all_strats = Strategy.objects.all()
+            data = []
+            count = 0
+            for strat in all_strats:
+                algo_dets = all_strats.values('id', 'name', 'description', 'user', 'created_at', 'approved')[count]
+                set = strat.backtest_set.all().order_by('-sharpe').values()
+                best_backtest = False
+                if set.count() > 0:
+                    best_backtest = set[0]
+                    bt_id = best_backtest['id']
+                    best_votes = BacktestVote.objects.filter(backtest=bt_id).values('user', 'vote')
+                    if not best_votes:
+                        best_votes = None
+                    # TODO check if there has been a vote
+                data.append({'algo_details' : algo_dets, 'best_backtest' : best_backtest, 'best_votes': best_votes})
+                count = count + 1
+            return Response(data , status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
             return Response("Could not get all of the algos", status=status.HTTP_400_BAD_REQUEST)
