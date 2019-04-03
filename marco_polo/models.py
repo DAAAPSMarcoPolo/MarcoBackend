@@ -91,3 +91,5 @@ class BacktestTrade(models.Model):
     buy_price = models.FloatField(null=False)
     sell_price = models.FloatField(null=False)
     qty = models.IntegerField(null=False)
+
+
