@@ -1,23 +1,27 @@
-import alpaca_trade_api as trade_api
+import alpaca_trade_api as tradeapi
 import numpy as np
 import pandas as pd
 import sys
+import os
 import importlib
 import pyclbr
 import logging
-import datetime
+import schedule
 from datetime import datetime, timedelta
 
 from marco_polo.backtesting.market_data import DataFetcher
 
 
-class live:
+class Live:
 
-    def __init__(self, strategy, universe, operating_funds):
+    def __init__(self, strategy, universe, operating_funds, keys):
         self.strategy = strategy
         self.strategy_name = strategy
         self.universe = universe
-        self.operating_funds = operating_funds
+        self.operating_funds = float(operating_funds)
+        self.price_map = None
+        self.api = tradeapi.REST(key_id='PK3MIMJUUKM3UT7QCLNA',
+                                 secret_key='/B6IuGjp8JmhCPWkMfILmYbS91i1c4L9p02oTV9e')
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO)
 
@@ -43,7 +47,7 @@ class live:
         self.logger.debug('Successfully loaded ' + self.strategy_name)
         return True
 
-    def initial_price_map(self):
+    def init_price_map(self):
         self.logger.info('Fetching Data...')
         now = datetime.datetime.now()
         start = now - timedelta(days=180)
@@ -51,15 +55,55 @@ class live:
         end = datetime.strptime(now, '%Y-%m-%d')
 
         price_map = DataFetcher(self.universe, self.start_date, self.end_date).daily_data()
-        self.universe_data = universe_data
-        self.logger.info('Complete.')
-        return [True, 'Successfully fetched data']
+        self.price_map = price_map
+        self.logger.info('Finished Fetching data.')
 
+        return True
 
-    def process_new_data(self):
+    def calc_indicators(self):
         pass
 
-    def run(self):
-        price_map = self.initial_price_map()
+    def process_new_data(self):
+        for symbol in self.price_map:
+            self.api.polygon.last_quote(symbol)
+            # Calculate new indicators
 
+        # rank here
+
+        return None
+
+    def buy(self):
+        # TODO: Buy stock through alpaca here
+
+        # TODO: Store in django
+
+        pass
+
+    def sell(self):
+        # TODO: Sell stock through alpaca
+
+        # TODO: Store in django
+        pass
+
+    def trade(self):
+        self.init_price_map()
+        self.process_new_data()
+
+        # Do ranking and check _buy and check_sell here
+
+    def run(self):
+        pid = os.getpid()
+        print(pid)
+        # Need to store the pid in django here.
+
+        schedule.every().monday.at("9:30").do(self.trade())
+        schedule.every().tuesday.at("9:30").do(self.trade())
+        schedule.every().wednesday.at("9:30").do(self.trade())
+        schedule.every().thursday.at("9:30").do(self.trade())
+        schedule.every().friday.at("9:30").do(self.trade())
+
+
+if __name__ == '__main__':
+    live = Live('mean_reversion.py', ['AAPL'], 1000, None)
+    live.run()
 
