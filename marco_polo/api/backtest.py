@@ -24,7 +24,8 @@ class BacktestAPI(generics.GenericAPIView):
         try:
             user = request.user
             used_universe_name = universe.name
-            used_universe = UsedUniverse.objects.create(user=user, name=used_universe_name)
+            used_universe = UsedUniverse.objects.create(
+                user=user, name=used_universe_name)
             used_universe_id = used_universe.id
             used_universe.save()
             print("created UsedUniverse")
@@ -32,10 +33,11 @@ class BacktestAPI(generics.GenericAPIView):
             print(e)
             return Response("Could not create new universe", status=status.HTTP_400_BAD_REQUEST)
 
-        stock_list = UniverseSerializer(universe, context=self.get_serializer_context()).data['stocks']
+        stock_list = UniverseSerializer(
+            universe, context=self.get_serializer_context()).data['stocks']
 
         t = threading.Thread(target=self.add_stocks,
-                              args=(used_universe, stock_list))
+                             args=(used_universe, stock_list))
         t.setDaemon(True)
         t.start()
 
@@ -54,17 +56,22 @@ class BacktestAPI(generics.GenericAPIView):
         }
         new_backtest_object = Backtest(**bt)
         new_backtest_object.save()
-        universe = UniverseSerializer(universe, context=self.get_serializer_context()).data
+        users = User.objects.all()
+        for u in users:
+            BacktestVote.objects.create(
+                user=u, backtest=new_backtest_object)
+        universe = UniverseSerializer(
+            universe, context=self.get_serializer_context()).data
         universe = universe['stocks']
         data['universe'] = universe
         data['strategy'] = Path(strategy.strategy_file.path).stem
         strategy_name = strategy.name
         new_backtest = BT(**data)
         user = User.objects.select_related('profile') \
-                .values('username', 'first_name', 'last_name', 'profile__phone_number') \
-                .get(username=request.user.username)
+            .values('username', 'first_name', 'last_name', 'profile__phone_number') \
+            .get(username=request.user.username)
         t2 = threading.Thread(target=self.backtest_helper,
-                             args=(user, new_backtest_object.id, strategy_name, new_backtest))
+                              args=(user, new_backtest_object.id, strategy_name, new_backtest))
         t2.setDaemon(True)
         t2.start()
 
@@ -105,7 +112,8 @@ class BacktestAPI(generics.GenericAPIView):
             bt.successful = False
             bt.complete = False
             body = "Your backtest on \'" + strategy_name + "\'" + ' between ' + backtest.start_date + ' and ' + \
-                   backtest.end_date + ' has failed with the following message: \n\n' + result[1]
+                   backtest.end_date + \
+                ' has failed with the following message: \n\n' + result[1]
 
         try:
             client.messages.create(
@@ -134,8 +142,10 @@ class BacktestAPI(generics.GenericAPIView):
         try:
             id = self.kwargs["id"]
             backtest = Backtest.objects.get(id=id)
-            backtest = BacktestSerializer(backtest, context=self.get_serializer_context()).data
-            backtest['pct_gain'] = (backtest['end_cash'] - backtest['initial_cash']) / backtest['initial_cash']
+            backtest = BacktestSerializer(
+                backtest, context=self.get_serializer_context()).data
+            backtest['pct_gain'] = (
+                backtest['end_cash'] - backtest['initial_cash']) / backtest['initial_cash']
             print(backtest)
             trades = BacktestTrade.objects.filter(backtest=id).values()
             backest_details = {
@@ -147,11 +157,15 @@ class BacktestAPI(generics.GenericAPIView):
 
         except Exception as e:
             backtests = []
-            backtest_list = Backtest.objects.filter(successful=True).order_by('-created_at')
+            backtest_list = Backtest.objects.filter(
+                successful=True).order_by('-created_at')
             for backtest in backtest_list:
-                bt = BacktestSerializer(backtest, context=self.get_serializer_context()).data
-                bt['pct_gain'] = (bt['end_cash']-bt['initial_cash']) / bt['initial_cash']
-                trades = BacktestTrade.objects.filter(backtest=backtest.id).values()
+                bt = BacktestSerializer(
+                    backtest, context=self.get_serializer_context()).data
+                bt['pct_gain'] = (
+                    bt['end_cash']-bt['initial_cash']) / bt['initial_cash']
+                trades = BacktestTrade.objects.filter(
+                    backtest=backtest.id).values()
                 backest_details = {
                     'backtest': bt,
                     'trades': trades
@@ -165,7 +179,7 @@ class BacktestVoteAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
 
-    # ask to go live    
+    # ask to go live
     def post(self, request, *args, **kwargs):
         try:
             bt_id = self.kwargs["id"]
@@ -176,12 +190,10 @@ class BacktestVoteAPI(generics.GenericAPIView):
             # create vote for each user
             users = User.objects.values('id')
             for user_id in users:
-                BacktestVote.objects.create(user=user_id,backtest=bt_id)
+                BacktestVote.objects.create(user=user_id, backtest=bt_id)
             return Response(staus=status.HTTP_201_CREATED)
         # no "id" supplied
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-    
+
     # submit vote
-
-

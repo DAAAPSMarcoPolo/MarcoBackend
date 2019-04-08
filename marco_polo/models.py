@@ -79,7 +79,7 @@ class BacktestVote(models.Model):
     backtest = models.ForeignKey(
         Backtest, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    vote = models.BooleanField(default=None)
+    vote = models.BooleanField(default=None, null=True)
 
 
 class BacktestTrade(models.Model):
@@ -91,5 +91,3 @@ class BacktestTrade(models.Model):
     buy_price = models.FloatField(null=False)
     sell_price = models.FloatField(null=False)
     qty = models.IntegerField(null=False)
-
-
