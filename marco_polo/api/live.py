@@ -95,3 +95,28 @@ class LiveAPI(generics.GenericAPIView):
                 p.close_price = response.filled_avg_price
                 p.save()
 
+    def get(self, request, *args, **kwargs):
+        try:
+            id = self.kwargs["id"]
+            live_instance = LiveTradeInstance.objects.get(id=id)
+            live_instance = LiveTradeInstanceSerializer(live_instance, context=self.get_serializer_context()).data
+            positions = LiveTradeInstancePosition.objects.filter(live_trade_instance=id).values()
+            live_instance_details = {
+                'live_instance': live_instance,
+                'trades': positions
+            }
+        except:
+            all_live_instances = []
+            live_instances = LiveTradeInstance.objects.filter(live=True)
+            for live_instance in live_instances:
+                li = LiveTradeInstanceSerializer(live_instance, context=self.get_serializer_context()).data
+                positions = LiveTradeInstancePosition.objects.filter(live_trade_instance=live_instance.id).values()
+                live_instance_details = {
+                    'live_instance': li,
+                    'trades': positions
+                }
+                all_live_instances.append(live_instance_details)
+            return Response(all_live_instances, status=status.HTTP_200_OK)
+
+        return Response(live_instance_details, status=status.HTTP_200_OK)
+

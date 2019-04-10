@@ -514,3 +514,142 @@ Response:
     ]
 }
 ]
+```
+
+## Live Trading Instance
+#### Post /api/live/
+##### This response can be sent one of two ways to either start or stop a backtest as seen below
+###### To start a backtest...
+Send:
+```json
+{
+  "mode": "start",
+  "backtest": 34
+}
+```
+Response:
+Starting up a live instance.
+###### To stop a backtest...(* Note that id is the id of the live instance)
+
+Send:
+```json
+{
+  "mode": "stop",
+  "id": 20
+}
+```
+Response:
+"Successfully shut down live instance."
+
+#### GET /api/live/\<live_instance_id>
+##### Returns a live trading instance and its trades
+Response:
+```json
+{
+    "live_instance": {
+        "id": 19,
+        "pid": 31127,
+        "live": false,
+        "backtest": 74
+    },
+    "trades": [
+        {
+            "id": 1,
+            "live_trade_instance_id": 19,
+            "symbol": "AAPL",
+            "open": true,
+            "open_date": "2019-04-10T16:43:15.619000Z",
+            "close_date": null,
+            "qty": 1,
+            "open_price": 2,
+            "close_price": null
+        },
+        {
+            "id": 2,
+            "live_trade_instance_id": 19,
+            "symbol": "MSFT",
+            "open": false,
+            "open_date": "2019-04-10T19:11:10.413000Z",
+            "close_date": "2019-04-10T19:11:12.947000Z",
+            "qty": 1,
+            "open_price": 2,
+            "close_price": 3
+        }
+    ]
+}
+```
+
+#### GET /api/live/
+##### Returns all live trading instance and their trades
+Response:
+```json
+[
+    {
+        "live_instance": {
+            "id": 19,
+            "pid": 31127,
+            "live": false,
+            "backtest": 74
+        },
+        "trades": [
+            {
+                "id": 1,
+                "live_trade_instance_id": 19,
+                "symbol": "AAPL",
+                "open": true,
+                "open_date": "2019-04-10T16:43:15.619000Z",
+                "close_date": null,
+                "qty": 1,
+                "open_price": 2,
+                "close_price": null
+            },
+            {
+                "id": 2,
+                "live_trade_instance_id": 19,
+                "symbol": "MSFT",
+                "open": false,
+                "open_date": "2019-04-10T19:11:10.413000Z",
+                "close_date": "2019-04-10T19:11:12.947000Z",
+                "qty": 1,
+                "open_price": 2,
+                "close_price": 3
+            }
+        ]
+    },
+    {
+        "live_instance": {
+            "id": 20,
+            "pid": 31122,
+            "live": false,
+            "backtest": 74
+        },
+        "trades": [
+            {
+                "id": 1,
+                "live_trade_instance_id": 19,
+                "symbol": "AAPL",
+                "open": true,
+                "open_date": "2019-04-10T16:43:15.619000Z",
+                "close_date": null,
+                "qty": 1,
+                "open_price": 2,
+                "close_price": null
+            },
+            {
+                "id": 2,
+                "live_trade_instance_id": 19,
+                "symbol": "MSFT",
+                "open": false,
+                "open_date": "2019-04-10T19:11:10.413000Z",
+                "close_date": "2019-04-10T19:11:12.947000Z",
+                "qty": 1,
+                "open_price": 2,
+                "close_price": 3
+            }
+        ]
+    }
+]
+
+```
+
+

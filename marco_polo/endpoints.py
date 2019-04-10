@@ -50,6 +50,7 @@ urlpatterns = [
   url("^backtest/(?P<id>\d+)/$", BacktestAPI.as_view()),
   url("^backtest/(?P<id>\d+)/live$", BacktestVoteAPI.as_view()),
   url("^strategybacktests/(?P<id>\d+)/$", StrategyBacktests.as_view()),
-  url("^live/$", LiveAPI.as_view())
+  url("^live/$", LiveAPI.as_view()),
+  url("^live/(?P<id>\d+)/$", LiveAPI.as_view()),
 
 ]
