@@ -17,6 +17,7 @@ class BacktestAPI(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
+        print('btttt')
         data = self.request.data
         universe = Universe.objects.get(id=data['universe'])
         strategy = Strategy.objects.get(id=data['strategy'])

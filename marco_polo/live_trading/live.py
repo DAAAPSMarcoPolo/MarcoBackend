@@ -29,6 +29,7 @@ class Live:
 
     def import_strategy(self):
         sys.path.append("../backendStorage")
+        print(sys.path)
 
         try:
             from os import listdir
@@ -104,7 +105,7 @@ class Live:
 
     def run(self):
         self.import_strategy()
-        print(self.strategy)
+        self.init_price_map()
         pid = os.getpid()
         # Need to store the pid in django here.
         self.trade()
