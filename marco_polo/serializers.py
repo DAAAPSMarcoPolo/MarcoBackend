@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.utils.crypto import get_random_string
-from .models import UserProfile, AlpacaAPIKeys, Strategy, BacktestVote, Universe, UsedUniverse, Backtest, BacktestTrade, Stock
+from .models import UserProfile, AlpacaAPIKeys, Strategy, BacktestVote, Universe, UsedUniverse, Backtest, BacktestTrade, Stock, LiveTradeInstance, LiveTradeInstancePosition
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
@@ -153,4 +153,16 @@ class BacktestSerializer(serializers.ModelSerializer):
 class BacktestTradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = BacktestTrade
+        fields = '__all__'
+
+
+class LiveTradeInstanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LiveTradeInstance
+        fields = '__all__'
+
+
+class LiveTradeInstancePositionerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LiveTradeInstancePosition
         fields = '__all__'
