@@ -40,8 +40,7 @@ class StrategyAPI(generics.GenericAPIView):
             try:
                 id = self.kwargs['id']
                 print(id)
-                algo = Strategy.objects.values(
-                    'name', 'description', 'user', 'created_at', 'approved').get(id=id)
+                algo = Strategy.objects.values().get(id=id)
                 backtest_list = Backtest.objects.filter(
                     strategy=id).values()
                 data = {
@@ -59,8 +58,7 @@ class StrategyAPI(generics.GenericAPIView):
             data = []
             count = 0
             for strat in all_strats:
-                algo_dets = all_strats.values(
-                    'id', 'name', 'description', 'user', 'created_at', 'approved')[count]
+                algo_dets = all_strats.values()[count]
                 set = strat.backtest_set.all().order_by('-sharpe').values()
                 best_backtest = False
                 best_votes = None
