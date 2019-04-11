@@ -391,36 +391,44 @@ Response:
 [
     {
         "algo_details": {
-            "name": "mean_reversion",
+            "id": 34,
+            "user_id": 5,
+            "name": "Mean Reversion",
             "description": "mean reversion",
-            "user": 5,
-            "created_at": "2019-03-23T19:11:36.123175Z",
-            "approved": false
+            "strategy_file": "uploads/algos/mean_reversion.py",
+            "approved": false,
+            "live": false,
+            "created_at": "2019-03-23T19:11:36.123175Z"
         },
         "best_backtest": {
-            "id": 35,
+            "id": 60,
             "strategy_id": 34,
-            "universe_id": 39,
+            "universe_id": 64,
             "user_id": 5,
             "complete": true,
             "successful": true,
-            "start_date": "2017-01-01T00:00:00Z",
-            "end_date": "2019-03-01T00:00:00Z",
+            "start_date": "2019-03-01T00:00:00Z",
+            "end_date": "2019-03-29T00:00:00Z",
             "initial_cash": 1000,
-            "end_cash": 2636.5377,
-            "sharpe": 2.94,
-            "created_at": "2019-03-27T15:49:15.083884Z"
-        }
+            "end_cash": 1192.48,
+            "sharpe": 3.43,
+            "created_at": "2019-03-29T18:45:46.384094Z"
+        },
+        "best_votes": null
     },
     {
         "algo_details": {
-            "name": "testalgo",
-            "description": "algoDescription",
-            "user": 13,
-            "created_at": "2019-03-27T21:23:48.064777Z",
-            "approved": false
+            "id": 48,
+            "user_id": 2,
+            "name": "Nameasfd",
+            "description": "asdfDescription",
+            "strategy_file": "uploads/algos/backtest.py",
+            "approved": false,
+            "live": false,
+            "created_at": "2019-03-29T17:37:07.662415Z"
         },
-        "best_backtest": ""
+        "best_backtest": false,
+        "best_votes": null
     }
 ]
 ```
@@ -431,40 +439,43 @@ Response:
 ```json
 {
     "algo_details": {
-        "name": "mean_reversion",
+        "id": 34,
+        "user_id": 5,
+        "name": "Mean Reversion",
         "description": "mean reversion",
-        "user": 5,
-        "created_at": "2019-03-23T19:11:36.123175Z",
-        "approved": false
+        "strategy_file": "uploads/algos/mean_reversion.py",
+        "approved": false,
+        "live": false,
+        "created_at": "2019-03-23T19:11:36.123175Z"
     },
     "bt_list": [
         {
-            "id": 37,
+            "id": 57,
             "strategy_id": 34,
-            "universe_id": 41,
+            "universe_id": 61,
             "user_id": 5,
-            "complete": false,
-            "successful": false,
-            "start_date": "2010-01-01T00:00:00Z",
+            "complete": true,
+            "successful": true,
+            "start_date": "2018-01-01T00:00:00Z",
             "end_date": "2019-03-01T00:00:00Z",
-            "initial_cash": 1000000,
-            "end_cash": 1000000,
-            "sharpe": -1,
-            "created_at": "2019-03-27T15:49:22.972281Z"
+            "initial_cash": 100,
+            "end_cash": 158.8203,
+            "sharpe": 2.42,
+            "created_at": "2019-03-29T16:40:02.345114Z"
         },
         {
-            "id": 35,
+            "id": 58,
             "strategy_id": 34,
-            "universe_id": 39,
+            "universe_id": 62,
             "user_id": 5,
             "complete": true,
             "successful": true,
             "start_date": "2017-01-01T00:00:00Z",
             "end_date": "2019-03-01T00:00:00Z",
-            "initial_cash": 1000,
-            "end_cash": 2636.5377,
-            "sharpe": 2.94,
-            "created_at": "2019-03-27T15:49:15.083884Z"
+            "initial_cash": 1000000,
+            "end_cash": 2173007.8437,
+            "sharpe": 2.63,
+            "created_at": "2019-03-29T16:40:18.428866Z"
         }
     ]
 }
