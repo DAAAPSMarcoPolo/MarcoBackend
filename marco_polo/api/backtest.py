@@ -89,7 +89,6 @@ class BacktestAPI(generics.GenericAPIView):
             cash = locale.currency(backtest.initial_funds, grouping=True)
             body = "Your backtest on \'" + strategy_name + "\'" + ' between ' + backtest.start_date + ' and ' + \
                    backtest.end_date + ' with ' + cash + ' has been completed.'
-
             for trade in backtest.trades:
                 new_trade = {
                     'backtest': bt,

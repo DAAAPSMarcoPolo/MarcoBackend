@@ -86,8 +86,29 @@ class BacktestTrade(models.Model):
     id = models.AutoField(primary_key=True)
     backtest = models.ForeignKey(Backtest, on_delete=models.CASCADE)
     symbol = models.CharField(max_length=6, null=False)
-    buy_time = models.DateTimeField(auto_now_add=True, blank=True)
-    sell_time = models.DateTimeField(auto_now_add=True, blank=True)
+    buy_time = models.DateTimeField(null=False)
+    sell_time = models.DateTimeField(null=False)
     buy_price = models.FloatField(null=False)
     sell_price = models.FloatField(null=False)
     qty = models.IntegerField(null=False)
+
+
+class LiveTradeInstance(models.Model):
+    id = models.AutoField(primary_key=True)
+    backtest = models.ForeignKey(Backtest, on_delete=models.CASCADE)
+    pid = models.IntegerField()
+    live = models.BooleanField(null=False, default=True)
+
+
+class LiveTradeInstancePosition(models.Model):
+    id = models.AutoField(primary_key=True)
+    live_trade_instance = models.ForeignKey(LiveTradeInstance, on_delete=models.CASCADE)
+    symbol = models.CharField(max_length=6)
+    open = models.BooleanField(default=False)
+    open_date = models.DateTimeField(null=False)
+    close_date = models.DateTimeField()
+    qty = models.IntegerField(null=False)
+    open_price = models.FloatField(null=False)
+    close_price = models.FloatField()
+
+
