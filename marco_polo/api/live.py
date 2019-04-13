@@ -26,6 +26,8 @@ class LiveAPI(generics.GenericAPIView):
             mode = data['mode']
             if mode == 'start':
                 backtest_id = data['backtest']
+                funds = data['funds']
+                keys = AlpacaAPIKeys.objects.get(id=1)
                 backtest = Backtest.objects.get(id=backtest_id)
                 strategy = Strategy.objects.get(id=backtest.strategy.id)
                 strategy = Path(strategy.strategy_file.path).stem
@@ -34,7 +36,7 @@ class LiveAPI(generics.GenericAPIView):
                 new_live_instance = LiveTradeInstance.objects.create(backtest_id=backtest_id, live=False, pid=-1)
                 live_instance_id = new_live_instance.id
                 new_live_instance.save()
-                live_instance = live.Live(live_instance_id, strategy, universe, 1000, None)
+                live_instance = live.Live(live_instance_id, strategy, universe, funds, keys)
 
                 p = Process(target=self.run_live, args=(live_instance,), daemon=True)
                 p.start()
@@ -78,7 +80,7 @@ class LiveAPI(generics.GenericAPIView):
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def run_live(self, live_instance):
-        live_instance.test()
+        live_instance.run()
 
     def close_positions(self, positions):
         if len(positions) > 0:
