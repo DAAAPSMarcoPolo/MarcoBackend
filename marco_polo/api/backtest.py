@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from knox.auth import TokenAuthentication
 from marco_polo.backtesting.backtest import Backtest as BT, BTStats
-from marco_polo.models import Universe, Backtest, Strategy, UsedUniverse, Stock, User, BacktestTrade, BacktestVote
+from marco_polo.models import Universe, Backtest, Strategy, UsedUniverse, Stock, User, BacktestTrade, BacktestVote, AlpacaAPIKeys
 from marco_polo.serializers import UniverseSerializer, UsedUniverseSerializer, BacktestSerializer, BacktestTradeSerializer
 import threading
 from django.conf import settings
@@ -18,6 +18,7 @@ class BacktestAPI(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         data = self.request.data
+        keys = AlpacaAPIKeys.objects.get(id=1)
         universe = Universe.objects.get(id=data['universe'])
         strategy = Strategy.objects.get(id=data['strategy'])
 
@@ -58,6 +59,7 @@ class BacktestAPI(generics.GenericAPIView):
         universe = universe['stocks']
         data['universe'] = universe
         data['strategy'] = Path(strategy.strategy_file.path).stem
+        data['keys'] = keys
         strategy_name = strategy.name
         new_backtest = BT(**data)
         user = User.objects.select_related('profile') \

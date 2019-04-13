@@ -535,7 +535,8 @@ Send:
 ```json
 {
   "mode": "start",
-  "backtest": 34
+  "backtest": 34,
+  "funds": 1000
 }
 ```
 Response:

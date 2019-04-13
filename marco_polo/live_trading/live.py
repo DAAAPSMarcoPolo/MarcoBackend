@@ -22,11 +22,12 @@ class Live:
         self.strategy_name = strategy
         self.universe = universe
         self.operating_funds = float(operating_funds)
+        self.keys = keys
         self.price_map = None
         self.open_price_map = None
         self.open_positions = []
-        self.api = tradeapi.REST(key_id='PK3MIMJUUKM3UT7QCLNA',
-                                 secret_key='/B6IuGjp8JmhCPWkMfILmYbS91i1c4L9p02oTV9e',
+        self.api = tradeapi.REST(key_id=keys.key_id,
+                                 secret_key=keys.secret_key,
                                  base_url='https://paper-api.alpaca.market')
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO)
@@ -62,7 +63,7 @@ class Live:
         start = start.strftime('%Y-%m-%d')
         end = now.strftime('%Y-%m-%d')
 
-        price_map = DataFetcher(self.universe, start, end).daily_data()
+        price_map = DataFetcher(self.universe, start, end, self.keys).daily_data()
         self.price_map = price_map
         self.open_price_map = {}
         for symbol in price_map:

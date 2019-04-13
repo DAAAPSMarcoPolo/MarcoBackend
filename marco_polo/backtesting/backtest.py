@@ -20,7 +20,7 @@ class Backtest:
 
     risk_free_return = .02
 
-    def __init__(self, strategy, initial_funds, universe, start_date, end_date):
+    def __init__(self, strategy, initial_funds, universe, start_date, end_date, keys):
         self.strategy = strategy
         self.strategy_name = strategy
         self.initial_funds = float(initial_funds)
@@ -64,7 +64,7 @@ class Backtest:
         # Check tech ind
         self.logger.info('Validating Strategy')
         error = False
-        tester = Test()
+        tester = Test(self.keys)
 
         price_map = tester.price_map()
         new_price_map = {}
