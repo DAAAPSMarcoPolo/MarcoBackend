@@ -6,15 +6,15 @@ import pandas as pd
 
 class DataFetcher:
     NY = 'America/New_York'
-    api = tradeapi.REST(
-        key_id='PK3MIMJUUKM3UT7QCLNA',
-        secret_key='/B6IuGjp8JmhCPWkMfILmYbS91i1c4L9p02oTV9e'
-    )
 
-    def __init__(self, universe, start_date, end_date):
+    def __init__(self, universe, start_date, end_date, keys):
         self.universe = universe
         self.start_date = start_date
         self.end_date = end_date
+        self.api = tradeapi.REST(
+            key_id=keys.key_id,
+            secret_key=keys.secret_key
+        )
 
     def _get_polygon_data(self, max_workers=5):
         # Get the map of DataFrame price data from polygon, in parallel

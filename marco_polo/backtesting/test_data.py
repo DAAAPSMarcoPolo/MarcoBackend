@@ -6,16 +6,20 @@ from marco_polo.backtesting.market_data import DataFetcher
 
 
 class Test:
+
     start_date = '2019-2-19'
     end_date = '2019-2-20'
-    price_map = DataFetcher(['AAPL', 'BBUY'], start_date, end_date).daily_data()
+
+    def __init__(self, keys):
+        self.keys = keys
+        # price_map = DataFetcher(['AAPL', 'BBUY'], self.start_date, self.end_date, self.keys).daily_data()
 
     day = timedelta(days=1)
     last_date = datetime.strptime(end_date, '%Y-%m-%d').date() + day
 
     def price_map(self):
-        price_map = DataFetcher(['AAPL', 'BBUY'], self.start_date, self.end_date).daily_data()
-        return(price_map)
+        price_map = DataFetcher(['AAPL', 'BBUY'], self.start_date, self.end_date, self.keys).daily_data()
+        return price_map
 
     def create_daily_data(self, price_map):
         data_by_date = {}
