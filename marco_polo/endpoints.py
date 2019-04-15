@@ -45,6 +45,7 @@ urlpatterns = [
   url("^algorithm/(?P<id>\d+)/$", StrategyAPI.as_view()),
   # Get stocks
   url("^stocks/$", StockAPI.as_view()),
+  url("^stocks/(?P<input>[\w\-]+)/$", StockAPI.as_view()),
   # Run backtest
   url("^backtest/$", BacktestAPI.as_view()),
   url("^backtest/(?P<id>\d+)/$", BacktestAPI.as_view()),

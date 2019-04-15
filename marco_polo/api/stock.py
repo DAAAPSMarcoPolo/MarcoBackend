@@ -12,12 +12,12 @@ class StockAPI(generics.GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         """ Get a stock universe """
-        # TODO
         try:
-            stocks = Stock.objects.all().values()
+            input = self.kwargs["input"]
+            stocks = Stock.objects.filter(symbol__istartswith=input).values()
             return Response({"stocks": stocks})
 
         except Exception as e:
-            print(e)
-            print('no stocks found')
-            return Response('No stocks found', status=status.HTTP_200_OK)
+            stocks = Stock.objects.all().values()
+
+            return Response({"stocks": stocks})

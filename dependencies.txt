@@ -11,8 +11,7 @@ twilio
 alpaca-trade-api
 numpy
 pandas==0.23.3
-TA-Lib
 django-cors-headers
 psutil
 schedule
-
+TA-Lib
