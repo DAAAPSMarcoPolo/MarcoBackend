@@ -29,6 +29,7 @@ class Backtest:
         self.universe = universe
         self.start_date = start_date
         self.end_date = end_date
+        self.keys = keys
         self.open_positions = {}
         self.trades = []
         self.universe_data = {}
@@ -136,7 +137,7 @@ class Backtest:
         days = (end - start).days
 
         if days < 1000:
-            universe_data = DataFetcher(self.universe, self.start_date, self.end_date).daily_data()
+            universe_data = DataFetcher(self.universe, self.start_date, self.end_date, self.keys).daily_data()
             self.universe_data = universe_data
             self.logger.info('Complete.')
             return [True, 'Successfully fetched data']
