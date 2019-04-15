@@ -56,7 +56,7 @@ class BacktestAPI(generics.GenericAPIView):
         }
         new_backtest_object = Backtest(**bt)
         new_backtest_object.save()
-        users = User.objects.all()
+        users = User.objects.filter(is_active=True)
         for u in users:
             BacktestVote.objects.create(
                 user=u, backtest=new_backtest_object)
@@ -148,9 +148,11 @@ class BacktestAPI(generics.GenericAPIView):
                 backtest['end_cash'] - backtest['initial_cash']) / backtest['initial_cash']
             print(backtest)
             trades = BacktestTrade.objects.filter(backtest=id).values()
+            votes = BacktestVote.objects.filter(backtest=id).values()
             backest_details = {
                 'backtest': backtest,
-                'trades': trades
+                'trades': trades,
+                'votes': votes
             }
 
             return Response(backest_details, status=status.HTTP_200_OK)
@@ -166,9 +168,13 @@ class BacktestAPI(generics.GenericAPIView):
                     bt['end_cash']-bt['initial_cash']) / bt['initial_cash']
                 trades = BacktestTrade.objects.filter(
                     backtest=backtest.id).values()
+                votes = BacktestVote.objects.filter(backtest=bt).values()
+                print("votes")
+                print(votes)
                 backest_details = {
                     'backtest': bt,
-                    'trades': trades
+                    'trades': trades,
+                    'votes': votes
                 }
                 backtests.append(backest_details)
 
@@ -179,21 +185,20 @@ class BacktestVoteAPI(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
 
-    # ask to go live
+    # cast vote
     def post(self, request, *args, **kwargs):
         try:
-            bt_id = self.kwargs["id"]
-            # check if votes have already been created
-            bt_vote = BacktestVote.objects.get(backtest=bt_id)
-            if bt_vote:
+            user_id = request.user.id
+            vote = self.kwargs["vote"]
+            bt_id = self.kwargs["bt_id"]
+            if vote != "approve" or vote != "deny":
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            # create vote for each user
-            users = User.objects.values('id')
-            for user_id in users:
-                BacktestVote.objects.create(user=user_id, backtest=bt_id)
-            return Response(staus=status.HTTP_201_CREATED)
+            vote_instance = BacktestVote.objects.filter(
+                backtest=bt_id, user=user_id)
+            vote_instance.vote = vote
+            vote_instance.save()
+            # TODO check if it should go live
+            return Response(status=status.HTTP_200_OK)
         # no "id" supplied
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    # submit vote

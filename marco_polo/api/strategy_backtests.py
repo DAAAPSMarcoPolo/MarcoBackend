@@ -13,7 +13,6 @@ class StrategyBacktests(generics.GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            print('here')
             backtests = []
             backtest_votes = []
             id = self.kwargs["id"]
@@ -25,11 +24,20 @@ class StrategyBacktests(generics.GenericAPIView):
                     backtest, context=self.get_serializer_context()).data
                 trades = BacktestTrade.objects.filter(
                     backtest=backtest.id).values()
-                votes = BacktestVote.objects.filter(
-                    backtest=id).values('user', 'vote')
-                bt = BacktestSerializer(backtest, context=self.get_serializer_context()).data
-                bt['pct_gain'] = (bt['end_cash']-bt['initial_cash']) / bt['initial_cash']
-                trades = BacktestTrade.objects.filter(backtest=backtest.id).values()
+                vote_list = BacktestVote.objects.filter(
+                    backtest=backtest, user__is_active=True).values('user', 'user__username', 'vote')
+                bt = BacktestSerializer(
+                    backtest, context=self.get_serializer_context()).data
+                bt['pct_gain'] = (
+                    bt['end_cash']-bt['initial_cash']) / bt['initial_cash']
+                trades = BacktestTrade.objects.filter(
+                    backtest=backtest.id).values()
+
+                votes = {
+                    'status': bt['vote_status'],
+                    'list': vote_list
+                }
+
                 backest_details = {
                     'backtest': bt,
                     'trades': trades,

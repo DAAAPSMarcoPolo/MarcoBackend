@@ -71,6 +71,7 @@ class Backtest(models.Model):
     initial_cash = models.FloatField(null=False)
     end_cash = models.FloatField(default=initial_cash, null=False)
     sharpe = models.FloatField(null=False)
+    vote_status = models.CharField(max_length=100, default='')
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
 
 
@@ -78,7 +79,8 @@ class BacktestVote(models.Model):
     id = models.AutoField(primary_key=True)
     backtest = models.ForeignKey(
         Backtest, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='user')
     vote = models.BooleanField(default=None, null=True)
 
 
