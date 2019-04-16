@@ -665,6 +665,8 @@ Response:
 ```
 #### GET /api/strategyliveinstances/\<strategy_id>
 ##### Returns live instacnes for a given strategy 
+Response:
+```json
 {
     "live_instances": [
         {
@@ -705,4 +707,54 @@ Response:
         }
     ]
 }
+```
 
+
+#### GET /api/tradelogs/
+##### Returns all tradelogs  
+Response:
+```json
+[
+    {
+        "id": 1,
+        "live_trade_instance_id": 19,
+        "symbol": "AAPL",
+        "open": true,
+        "open_date": "2019-04-10T16:43:15.619000Z",
+        "close_date": null,
+        "qty": 1,
+        "open_price": 2,
+        "close_price": null
+    },
+    {
+        "id": 2,
+        "live_trade_instance_id": 19,
+        "symbol": "MSFT",
+        "open": false,
+        "open_date": "2019-04-10T19:11:10.413000Z",
+        "close_date": "2019-04-10T19:11:12.947000Z",
+        "qty": 1,
+        "open_price": 2,
+        "close_price": 3
+    }
+]
+```
+
+#### GET /api/tradelogs/\<livetradeinstanceposition_id>
+##### Returns tradelog of given id 
+Response:
+```json
+[
+    {
+        "id": 1,
+        "live_trade_instance_id": 19,
+        "symbol": "AAPL",
+        "open": true,
+        "open_date": "2019-04-10T16:43:15.619000Z",
+        "close_date": null,
+        "qty": 1,
+        "open_price": 2,
+        "close_price": null
+    }
+]
+```
