@@ -663,5 +663,46 @@ Response:
 ]
 
 ```
-
+#### GET /api/strategyliveinstances/\<strategy_id>
+##### Returns live instacnes for a given strategy 
+{
+    "live_instances": [
+        {
+            "id": 26,
+            "backtest_id": 74,
+            "pid": -1,
+            "live": true
+        },
+        {
+            "id": 27,
+            "backtest_id": 74,
+            "pid": -1,
+            "live": false
+        },
+        {
+            "id": 28,
+            "backtest_id": 74,
+            "pid": -1,
+            "live": true
+        },
+        {
+            "id": 29,
+            "backtest_id": 74,
+            "pid": -1,
+            "live": true
+        }
+    ],
+    "strategy_details": [
+        {
+            "id": 34,
+            "user_id": 5,
+            "name": "Mean Reversion",
+            "description": "mean reversion",
+            "strategy_file": "uploads/algos/mean_reversion.py",
+            "approved": false,
+            "live": false,
+            "created_at": "2019-03-23T19:11:36.123175Z"
+        }
+    ]
+}
 
