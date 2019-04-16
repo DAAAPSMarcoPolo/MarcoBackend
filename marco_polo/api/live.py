@@ -117,6 +117,7 @@ class LiveAPI(generics.GenericAPIView):
                 'live_instance': live_instance,
                 'trades': positions
             }
+            return Response(live_instance_details, status=status.HTTP_200_OK)
         except:
             all_live_instances = []
             live_instances = LiveTradeInstance.objects.filter(live=True)
@@ -130,5 +131,26 @@ class LiveAPI(generics.GenericAPIView):
                 all_live_instances.append(live_instance_details)
             return Response(all_live_instances, status=status.HTTP_200_OK)
 
-        return Response(live_instance_details, status=status.HTTP_200_OK)
 
+class StrategyLiveInstanceAPI(generics.GenericAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    
+    def get(self, request, *args, **kwargs):
+        try:
+            id = self.kwargs["id"]
+            alllives = []
+            strategy = Strategy.objects.get(id=id)
+            btset = strategy.backtest_set.all()
+            for bt in btset: 
+                lives = bt.livetradeinstance_set.all().values()
+                for l in lives:
+                    alllives.append(l)
+            strategy = Strategy.objects.filter(id=id)
+            data = {'live_instances' : alllives, 'strategy_details' : strategy.values()}
+            print(data)
+            return Response(data, status=status.HTTP_200_OK)
+        except: 
+            return Response("Could not get live instances for given strategy" ,status=status.HTTP_400_BAD_REQUEST)
+
+           

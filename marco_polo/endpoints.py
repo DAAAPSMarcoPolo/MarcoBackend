@@ -9,7 +9,7 @@ from marco_polo.api.universe import UniverseAPI
 from marco_polo.api.alpaca import SeedAPI
 from marco_polo.api.stock import StockAPI
 from marco_polo.api.backtest import BacktestAPI
-from marco_polo.api.live import LiveAPI
+from marco_polo.api.live import LiveAPI, StrategyLiveInstanceAPI
 from marco_polo.api.backtest import BacktestVoteAPI
 from marco_polo.api.strategy_backtests import StrategyBacktests
 
@@ -53,5 +53,5 @@ urlpatterns = [
   url("^strategybacktests/(?P<id>\d+)/$", StrategyBacktests.as_view()),
   url("^live/$", LiveAPI.as_view()),
   url("^live/(?P<id>\d+)/$", LiveAPI.as_view()),
-
+  url("^strategyliveinstances/(?P<id>\d+)/$", StrategyLiveInstanceAPI.as_view())
 ]
