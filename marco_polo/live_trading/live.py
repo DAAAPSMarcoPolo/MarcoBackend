@@ -28,7 +28,8 @@ class Live:
         self.open_positions = []
         self.api = tradeapi.REST(key_id=keys.key_id,
                                  secret_key=keys.secret_key,
-                                 base_url='https://paper-api.alpaca.market')
+                                 base_url='https://paper-api.alpaca.markets/')
+
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO)
 
@@ -169,6 +170,7 @@ class Live:
             self.buy(tup[0], tup[1], allocated_funds)
 
     def trading_day(self):
+        print('try')
         clock = self.api.get_clock()
         if clock.is_open:
             return True
