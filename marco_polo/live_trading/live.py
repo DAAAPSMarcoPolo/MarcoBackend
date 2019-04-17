@@ -6,6 +6,7 @@ import logging
 import schedule
 from datetime import datetime, timedelta
 import time
+import os
 from marco_polo.models import LiveTradeInstance, LiveTradeInstancePosition, User
 
 from django.conf import settings
@@ -35,7 +36,6 @@ class Live:
 
     def import_strategy(self):
         sys.path.append("../backendStorage")
-        print(sys.path)
 
         try:
             from os import listdir
@@ -71,7 +71,6 @@ class Live:
             self.open_price_map[symbol] = price_map[symbol]['open'].values
 
         self.price_map = self.strategy.add_tech_ind(self.price_map)
-        print(price_map)
 
         self.logger.info('Finished Fetching data.')
 
@@ -170,7 +169,6 @@ class Live:
             self.buy(tup[0], tup[1], allocated_funds)
 
     def trading_day(self):
-        print('try')
         clock = self.api.get_clock()
         if clock.is_open:
             return True
@@ -179,6 +177,7 @@ class Live:
     def run(self):
         live_instance = LiveTradeInstance.objects.get(id=self.id)
         live_instance.live = True
+        live_instance.pid = os.getpid()
         live_instance.save()
 
         if self.trading_day():
