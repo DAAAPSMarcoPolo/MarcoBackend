@@ -17,8 +17,8 @@ from datetime import datetime
 
 
 class LiveAPI(generics.GenericAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
         try:
@@ -33,7 +33,7 @@ class LiveAPI(generics.GenericAPIView):
                 strategy = Path(strategy.strategy_file.path).stem
                 universe = UsedUniverse.objects.get(id=backtest.universe.id)
                 universe = UsedUniverseSerializer(universe, context=self.get_serializer_context()).data['stocks']
-                new_live_instance = LiveTradeInstance.objects.create(backtest_id=backtest_id, live=False, pid=-1)
+                new_live_instance = LiveTradeInstance.objects.create(backtest_id=backtest_id, live=False)
                 live_instance_id = new_live_instance.id
                 new_live_instance.save()
                 live_instance = live.Live(live_instance_id, strategy, universe, funds, keys)
@@ -42,26 +42,25 @@ class LiveAPI(generics.GenericAPIView):
                 db.connections.close_all()
                 p = Process(target=self.run_live, args=(live_instance,), daemon=True)
                 p.start()
-                live_instance = LiveTradeInstance.objects.get(id=live_instance_id)
-                live_instance.pid = p.pid
-                print(p.pid)
-                live_instance.save()
 
                 return Response("Starting up a live instance.", status=status.HTTP_200_OK)
 
             else:
                 live_instance_id = data['id']
                 live_instance = LiveTradeInstance.objects.get(id=live_instance_id)
-
+                print('here')
                 try:
-                    p = psutil.Process(live_instance.pid)
-                    p.terminate()
+                    live_instance.live = False
+                    live_instance.save()
+                    try:
+                        p = psutil.Process(live_instance.pid)
+                        p.terminate()
+                    except:
+                        print("killed already")
+                    print('here')
                     # Terminate live trading instance
                     print('terminating process')
                     print(live_instance.pid)
-
-                    live_instance.live = False
-                    live_instance.save()
 
                     # Close out open positions in thread in case the market is closed.
                     positions = LiveTradeInstancePosition.objects.filter(live_instance=live_instance, open=True)
