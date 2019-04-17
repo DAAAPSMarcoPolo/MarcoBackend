@@ -71,6 +71,7 @@ class Backtest(models.Model):
     initial_cash = models.FloatField(null=False)
     end_cash = models.FloatField(default=initial_cash, null=False)
     sharpe = models.FloatField(null=False)
+    vote_status = models.CharField(max_length=100, default='')
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
 
 

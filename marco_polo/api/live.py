@@ -17,8 +17,8 @@ from datetime import datetime
 
 
 class LiveAPI(generics.GenericAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
         try:
@@ -38,16 +38,15 @@ class LiveAPI(generics.GenericAPIView):
                 new_live_instance.save()
                 live_instance = live.Live(live_instance_id, strategy, universe, funds, keys)
 
+                from django import db
+                db.connections.close_all()
                 p = Process(target=self.run_live, args=(live_instance,), daemon=True)
                 p.start()
                 live_instance = LiveTradeInstance.objects.get(id=live_instance_id)
                 live_instance.pid = p.pid
                 print(p.pid)
                 live_instance.save()
-                strategy = strategy = Strategy.objects.get(id=backtest.strategy.id)
-                if live_instance.live: 
-                    strategy.live = True
-                strategy.save()               
+
                 return Response("Starting up a live instance.", status=status.HTTP_200_OK)
 
             else:
@@ -63,14 +62,7 @@ class LiveAPI(generics.GenericAPIView):
 
                     live_instance.live = False
                     live_instance.save()
-                    backtest = Backtest.objects.get(id=backtest_id)
-                    strategy = Strategy.objects.get(id=backtest.strategy.id)
-                    set = strategy.backtest_set.all()
-                    if set.count() > 0: 
-                        strategy.live = True 
-                    else: 
-                        strategy.live = False
-                    strategy.save()
+
                     # Close out open positions in thread in case the market is closed.
                     positions = LiveTradeInstancePosition.objects.filter(live_instance=live_instance, open=True)
                     t = threading.Thread(target=self.close_positions(),
