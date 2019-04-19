@@ -179,11 +179,10 @@ class Live:
         live_instance.live = True
         live_instance.pid = os.getpid()
         live_instance.save()
-
+        print(self.trading_day())
         if self.trading_day():
             self.import_strategy()
             self.init_price_map()
-
             schedule.every().monday.at("09:30").do(self.manage_portfolio)
             schedule.every().tuesday.at("09:30").do(self.manage_portfolio)
             schedule.every().wednesday.at("09:30").do(self.manage_portfolio)
