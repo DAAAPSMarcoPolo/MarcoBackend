@@ -159,6 +159,8 @@ class BacktestAPI(generics.GenericAPIView):
             trades = BacktestTrade.objects.filter(backtest=id).values()
             graph = BacktestGraph.objects.filter(
                 backtest=id).order_by('date').values()
+            for g in graph:
+                g['date'] = g['date'].strftime('%m/%d/%Y')
             backest_details = {
                 'backtest': backtest,
                 'trades': trades,
@@ -180,6 +182,8 @@ class BacktestAPI(generics.GenericAPIView):
                     backtest=backtest.id).values()
                 graph = BacktestGraph.objects.filter(
                     backtest=backtest.id).order_by('date').values()
+                for g in graph:
+                    g['date'] = g['date'].strftime('%m/%d/%Y')
                 backest_details = {
                     'backtest': backtest,
                     'trades': trades,

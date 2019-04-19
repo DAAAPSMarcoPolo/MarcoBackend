@@ -2,7 +2,7 @@ from rest_framework import generics, permissions
 from knox.auth import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework import status
-from marco_polo.models import Universe, Backtest, Strategy, BacktestTrade, BacktestVote
+from marco_polo.models import Universe, Backtest, Strategy, BacktestTrade, BacktestVote, BacktestGraph
 from marco_polo.serializers import BacktestSerializer
 from datetime import datetime
 
@@ -32,16 +32,19 @@ class StrategyBacktests(generics.GenericAPIView):
                     bt['end_cash']-bt['initial_cash']) / bt['initial_cash']
                 trades = BacktestTrade.objects.filter(
                     backtest=backtest.id).values()
-
+                graph = BacktestGraph.objects.filter(
+                    backtest=backtest.id).order_by('date').values()
+                for g in graph:
+                    g['date'] = g['date'].strftime('%m/%d/%Y')
                 votes = {
                     'status': bt['vote_status'],
                     'list': vote_list
                 }
-
                 backest_details = {
                     'backtest': bt,
                     'trades': trades,
-                    'votes': votes
+                    'votes': votes,
+                    'graph': graph,
                 }
 
                 backtests.append(backest_details)
