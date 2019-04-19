@@ -95,10 +95,17 @@ class BacktestTrade(models.Model):
     qty = models.IntegerField(null=False)
 
 
+class BacktestGraph(models.Model):
+    id = models.AutoField(primary_key=True)
+    backtest = models.ForeignKey(Backtest, on_delete=models.CASCADE)
+    date = models.DateTimeField(null=False)
+    value = models.FloatField(null=False)
+
+
 class LiveTradeInstance(models.Model):
     id = models.AutoField(primary_key=True)
     backtest = models.ForeignKey(Backtest, on_delete=models.CASCADE)
-    pid = models.IntegerField()
+    pid = models.IntegerField(null=True)
     live = models.BooleanField(null=False, default=True)
 
 

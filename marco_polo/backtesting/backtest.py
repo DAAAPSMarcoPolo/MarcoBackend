@@ -29,9 +29,11 @@ class Backtest:
         self.universe = universe
         self.start_date = start_date
         self.end_date = end_date
+        self.keys = keys
         self.open_positions = {}
         self.trades = []
         self.universe_data = {}
+        self.performance = []
         self.running = True
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO)
@@ -136,7 +138,7 @@ class Backtest:
         days = (end - start).days
 
         if days < 1000:
-            universe_data = DataFetcher(self.universe, self.start_date, self.end_date).daily_data()
+            universe_data = DataFetcher(self.universe, self.start_date, self.end_date, self.keys).daily_data()
             self.universe_data = universe_data
             self.logger.info('Complete.')
             return [True, 'Successfully fetched data']
@@ -160,6 +162,7 @@ class Backtest:
         self.trades.append(Trade(self.open_positions[symbol], exit_time, exit_price))
 
         p_l = self.open_positions[symbol].qty * (exit_price - self.open_positions[symbol].entry_price)
+        self.performance.append((exit_time, self.current_funds+p_l))
         self.current_funds = self.current_funds + p_l
         del self.open_positions[symbol]
 
@@ -195,7 +198,8 @@ class Backtest:
         curr_portfolio = []
 
         for position in self.open_positions:
-            curr_portfolio.append(self.open_positions[position].symbol)
+            symbol = self.open_positions[position].symbol
+            curr_portfolio.append(symbol)
 
         stock_to_sell_tuples = self.strategy.stocks_to_sell(curr_portfolio, daily_data)
 
@@ -218,7 +222,7 @@ class Backtest:
         day = timedelta(days=1)
         curr_date = datetime.strptime(self.start_date, '%Y-%m-%d').date()
         last_date = datetime.strptime(self.end_date, '%Y-%m-%d').date() + day
-
+        self.performance.append((curr_date, self.initial_funds))
         while curr_date <= last_date:
             if curr_date in daily_dict:
                 daily_data = daily_dict[curr_date]
@@ -228,6 +232,8 @@ class Backtest:
         self.logger.info('Finished Backtest.')
         stats = BTStats(self)
         summary = stats.summary
+        print(self.performance[-1])
+        print(self.current_funds)
         return [True, summary]
 
     def run(self):
@@ -281,7 +287,7 @@ class Trade:
 class BTStats:
     def __init__(self, bt):
         self.bt = bt
-        self.spy = DataFetcher(['SPY'], bt.start_date, bt.end_date).daily_data()['SPY']
+        self.spy = DataFetcher(['SPY'], bt.start_date, bt.end_date, bt.keys).daily_data()['SPY']
 
     @property
     def summary(self):
@@ -338,25 +344,30 @@ class BTStats:
             sharpe = round(diff_return / s_d, 2)
         return sharpe
 
-
-class PrintColors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
+#
+# class PrintColors:
+#     HEADER = '\033[95m'
+#     OKBLUE = '\033[94m'
+#     OKGREEN = '\033[92m'
+#     WARNING = '\033[93m'
+#     FAIL = '\033[91m'
+#     ENDC = '\033[0m'
+#     BOLD = '\033[1m'
+#     UNDERLINE = '\033[4m'
+#
 
 # # Demo Backtests
 #
-# # Correct Strategy
-# bt = Backtest('mean_reversion', 1000, Universe, '2018-1-1', '2019-2-13')
+# Correct Strategy
+# class Keys:
+#     def __init__(self, key_id, secret_key):
+#         self.key_id = key_id
+#         self.secret_key = secret_key
+# keys = Keys('PK3MIMJUUKM3UT7QCLNA', '/B6IuGjp8JmhCPWkMfILmYbS91i1c4L9p02oTV9e')
+# bt = Backtest('mean_reversion', 1000, Universe, '2018-1-1', '2019-2-13', keys=keys)
 # bt.run()
 # btStats = BTStats(bt)
-# time.sleep(.1)
+#time.sleep(.1)
 #
 # print(PrintColors.OKGREEN)
 # print("Initial Funds: ${}".format(round(bt.initial_funds, 2)))

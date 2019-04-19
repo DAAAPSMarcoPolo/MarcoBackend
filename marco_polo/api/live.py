@@ -33,33 +33,34 @@ class LiveAPI(generics.GenericAPIView):
                 strategy = Path(strategy.strategy_file.path).stem
                 universe = UsedUniverse.objects.get(id=backtest.universe.id)
                 universe = UsedUniverseSerializer(universe, context=self.get_serializer_context()).data['stocks']
-                new_live_instance = LiveTradeInstance.objects.create(backtest_id=backtest_id, live=False, pid=-1)
+                new_live_instance = LiveTradeInstance.objects.create(backtest_id=backtest_id, live=False)
                 live_instance_id = new_live_instance.id
                 new_live_instance.save()
                 live_instance = live.Live(live_instance_id, strategy, universe, funds, keys)
 
+                from django import db
+                db.connections.close_all()
                 p = Process(target=self.run_live, args=(live_instance,), daemon=True)
                 p.start()
-                live_instance = LiveTradeInstance.objects.get(id=live_instance_id)
-                live_instance.pid = p.pid
-                print(p.pid)
-                live_instance.save()
 
                 return Response("Starting up a live instance.", status=status.HTTP_200_OK)
 
             else:
                 live_instance_id = data['id']
                 live_instance = LiveTradeInstance.objects.get(id=live_instance_id)
-
+                print('here')
                 try:
-                    p = psutil.Process(live_instance.pid)
-                    p.terminate()
+                    live_instance.live = False
+                    live_instance.save()
+                    try:
+                        p = psutil.Process(live_instance.pid)
+                        p.terminate()
+                    except:
+                        print("killed already")
+                    print('here')
                     # Terminate live trading instance
                     print('terminating process')
                     print(live_instance.pid)
-
-                    live_instance.live = False
-                    live_instance.save()
 
                     # Close out open positions in thread in case the market is closed.
                     positions = LiveTradeInstancePosition.objects.filter(live_instance=live_instance, open=True)
@@ -107,6 +108,7 @@ class LiveAPI(generics.GenericAPIView):
                 'live_instance': live_instance,
                 'trades': positions
             }
+            return Response(live_instance_details, status=status.HTTP_200_OK)
         except:
             all_live_instances = []
             live_instances = LiveTradeInstance.objects.filter(live=True)
@@ -120,5 +122,26 @@ class LiveAPI(generics.GenericAPIView):
                 all_live_instances.append(live_instance_details)
             return Response(all_live_instances, status=status.HTTP_200_OK)
 
-        return Response(live_instance_details, status=status.HTTP_200_OK)
 
+class StrategyLiveInstanceAPI(generics.GenericAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    
+    def get(self, request, *args, **kwargs):
+        try:
+            id = self.kwargs["id"]
+            alllives = []
+            strategy = Strategy.objects.get(id=id)
+            btset = strategy.backtest_set.all()
+            for bt in btset: 
+                lives = bt.livetradeinstance_set.all().values()
+                for l in lives:
+                    alllives.append(l)
+            strategy = Strategy.objects.filter(id=id)
+            data = {'live_instances' : alllives, 'strategy_details' : strategy.values()}
+            print(data)
+            return Response(data, status=status.HTTP_200_OK)
+        except: 
+            return Response("Could not get live instances for given strategy" ,status=status.HTTP_400_BAD_REQUEST)
+
+           

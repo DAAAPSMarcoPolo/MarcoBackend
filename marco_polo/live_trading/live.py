@@ -6,6 +6,7 @@ import logging
 import schedule
 from datetime import datetime, timedelta
 import time
+import os
 from marco_polo.models import LiveTradeInstance, LiveTradeInstancePosition, User
 
 from django.conf import settings
@@ -28,13 +29,13 @@ class Live:
         self.open_positions = []
         self.api = tradeapi.REST(key_id=keys.key_id,
                                  secret_key=keys.secret_key,
-                                 base_url='https://paper-api.alpaca.market')
+                                 base_url='https://paper-api.alpaca.markets/')
+
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO)
 
     def import_strategy(self):
         sys.path.append("../backendStorage")
-        print(sys.path)
 
         try:
             from os import listdir
@@ -70,7 +71,6 @@ class Live:
             self.open_price_map[symbol] = price_map[symbol]['open'].values
 
         self.price_map = self.strategy.add_tech_ind(self.price_map)
-        print(price_map)
 
         self.logger.info('Finished Fetching data.')
 
@@ -177,6 +177,7 @@ class Live:
     def run(self):
         live_instance = LiveTradeInstance.objects.get(id=self.id)
         live_instance.live = True
+        live_instance.pid = os.getpid()
         live_instance.save()
 
         if self.trading_day():
