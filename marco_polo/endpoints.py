@@ -47,9 +47,9 @@ urlpatterns = [
     url("^stocks/$", StockAPI.as_view()),
     url("^stocks/(?P<input>[\w\-]+)/$", StockAPI.as_view()),
     # Run backtest
+    url("^backtest/(?P<id>\d+)/vote$", BacktestVoteAPI.as_view()),
     url("^backtest/$", BacktestAPI.as_view()),
     url("^backtest/(?P<id>\d+)/$", BacktestAPI.as_view()),
-    url("^backtest/(?P<id>\d+)/vote$", BacktestVoteAPI.as_view()),
     url("^strategybacktests/(?P<id>\d+)/$", StrategyBacktests.as_view()),
     url("^live/$", LiveAPI.as_view()),
     url("^live/(?P<id>\d+)/$", LiveAPI.as_view()),

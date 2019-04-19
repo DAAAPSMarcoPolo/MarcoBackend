@@ -191,16 +191,69 @@ class BacktestVoteAPI(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         try:
             user_id = request.user.id
-            vote = self.kwargs["vote"]
-            bt_id = self.kwargs["bt_id"]
-            if vote != "approve" or vote != "deny":
+            req = self.request.data
+            vote = req['vote']
+            bt_id = self.kwargs["id"]
+            backtest = Backtest.objects.get(id=bt_id)
+            users_voting = BacktestVote.objects.filter(
+                backtest=bt_id, user__is_active=True).count()
+            if vote == "approve":
+                BacktestVote.objects.filter(
+                    backtest=bt_id, user=user_id).update(vote=True)
+                if backtest.vote_status == "approved":
+                    return Response(status=status.HTTP_200_OK)
+
+            elif vote == "deny":
+                BacktestVote.objects.filter(
+                    backtest=bt_id, user=user_id).update(vote=False)
+                if backtest.vote_status == "denied":
+                    return Response(status=status.HTTP_200_OK)
+
+            else:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            vote_instance = BacktestVote.objects.filter(
-                backtest=bt_id, user=user_id)
-            vote_instance.vote = vote
-            vote_instance.save()
-            # TODO check if it should go live
+
+            # check if backtest should be approved for live trading
+            approval_votes = BacktestVote.objects.filter(
+                backtest=bt_id, user__is_active=True, vote=True).count()
+            votes_needed_approval = int(
+                users_voting / 2) + int(users_voting % 2)
+            vote_pending_approval = False
+            if approval_votes >= votes_needed_approval:
+                Backtest.objects.filter(id=bt_id).update(
+                    vote_status="approved")
+                return Response(status=status.HTTP_200_OK)
+
+            # check if backtest should be denied from live trading
+            denial_votes = BacktestVote.objects.filter(
+                backtest=bt_id, user__is_active=True, vote=False).count()
+            votes_needed_denial = int(users_voting / 2)
+            vote_pending_denial = False
+            if denial_votes >= votes_needed_denial:
+                Backtest.objects.filter(id=bt_id).update(
+                    vote_status="denied")
+                return Response(status=status.HTTP_200_OK)
+
+            Backtest.objects.filter(id=bt_id).update(vote_status="")
+
             return Response(status=status.HTTP_200_OK)
+
         # no "id" supplied
         except Exception as e:
+            print(e)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            bt_id = self.kwargs["id"]
+            bt = Backtest.objects.get(
+                id=bt_id)
+            vote_list = BacktestVote.objects.filter(
+                backtest=bt_id, user__is_active=True).values('user', 'user__username', 'vote')
+            votes = {
+                'list': vote_list,
+                'status': bt.vote_status
+            }
+            return Response({'votes': votes}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
             return Response(status=status.HTTP_400_BAD_REQUEST)
