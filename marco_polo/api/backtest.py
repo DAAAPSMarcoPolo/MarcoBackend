@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from knox.auth import TokenAuthentication
 from marco_polo.backtesting.backtest import Backtest as BT, BTStats
-from marco_polo.models import Universe, Backtest, Strategy, UsedUniverse, Stock, User, BacktestTrade, BacktestVote, AlpacaAPIKeys
+from marco_polo.models import Universe, Backtest, Strategy, UsedUniverse, Stock, User, BacktestTrade, BacktestVote, AlpacaAPIKeys, BacktestGraph
 from marco_polo.serializers import UniverseSerializer, UsedUniverseSerializer, BacktestSerializer, BacktestTradeSerializer
 import threading
 from django.conf import settings
@@ -102,6 +102,13 @@ class BacktestAPI(generics.GenericAPIView):
                     'qty': trade.exit_price
                 }
                 BacktestTrade.objects.create(**new_trade)
+            for performace in backtest.performance:
+                new_performace = {
+                    'backtest': bt,
+                    'date': performace[0],
+                    'value': performace[1]
+                }
+                BacktestGraph.objects.create(**new_performace)
 
         else:
             bt.successful = False
@@ -140,9 +147,11 @@ class BacktestAPI(generics.GenericAPIView):
             backtest['pct_gain'] = (backtest['end_cash'] - backtest['initial_cash']) / backtest['initial_cash']
             print(backtest)
             trades = BacktestTrade.objects.filter(backtest=id).values()
+            graph = BacktestGraph.objects.filter(backtest=id).order_by('date').values()
             backest_details = {
                 'backtest': backtest,
-                'trades': trades
+                'trades': trades,
+                'graph': graph
             }
 
             return Response(backest_details, status=status.HTTP_200_OK)
@@ -154,9 +163,11 @@ class BacktestAPI(generics.GenericAPIView):
                 bt = BacktestSerializer(backtest, context=self.get_serializer_context()).data
                 bt['pct_gain'] = (bt['end_cash']-bt['initial_cash']) / bt['initial_cash']
                 trades = BacktestTrade.objects.filter(backtest=backtest.id).values()
+                graph = BacktestGraph.objects.filter(backtest=backtest.id).order_by('date').values()
                 backest_details = {
-                    'backtest': bt,
-                    'trades': trades
+                    'backtest': backtest,
+                    'trades': trades,
+                    'graph': graph
                 }
                 backtests.append(backest_details)
 
