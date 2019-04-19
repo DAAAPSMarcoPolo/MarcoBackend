@@ -758,3 +758,12 @@ Response:
     }
 ]
 ```
+
+#### GET /api/buyingpower/
+##### Returns buying power of account
+Response:
+```json
+{
+    "value": "30000"
+}
+```

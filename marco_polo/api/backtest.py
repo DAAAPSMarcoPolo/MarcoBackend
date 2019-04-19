@@ -10,6 +10,7 @@ from django.conf import settings
 from twilio.rest import Client
 from pathlib import Path
 import locale
+from babel.numbers import format_currency
 
 
 class BacktestAPI(generics.GenericAPIView):
@@ -95,7 +96,7 @@ class BacktestAPI(generics.GenericAPIView):
             bt.complete = True
             print('bt is now complete')
             locale.setlocale(locale.LC_ALL, '')
-            cash = locale.currency(backtest.initial_funds, grouping=True)
+            cash = format_currency(backtest.initial_funds, 'USD', locale='en_US')
             body = "Your backtest on \'" + strategy_name + "\'" + ' between ' + backtest.start_date + ' and ' + \
                    backtest.end_date + ' with ' + cash + ' has been completed.'
             for trade in backtest.trades:
