@@ -41,7 +41,7 @@ class UserSettingsAPI(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         try:
             user = User.objects.select_related('profile') \
-                .values('username', 'first_name', 'last_name', 'profile__phone_number') \
+                .values('id', 'username', 'first_name', 'last_name', 'profile__phone_number') \
                 .get(username=self.request.user.username)
         except User.DoesNotExist:
             print("user DNE")

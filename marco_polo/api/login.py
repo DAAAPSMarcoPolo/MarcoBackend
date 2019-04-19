@@ -44,18 +44,20 @@ class AddUserAPI(generics.GenericAPIView):
         # regex to check email
         pattern = re.compile("^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$")
         if not pattern.match(username):
-          return Response({
-            "error": "invalid email address"
-          }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "error": "invalid email address"
+            }, status=status.HTTP_400_BAD_REQUEST)
         msg = "Username: " + username + "\nPassword: " + password
-        Utils.send_email(self, message=msg, subject="marco_polo Login Credentials", recipients=[username])
+        Utils.send_email(
+            self, message=msg, subject="marco_polo Login Credentials", recipients=[username])
         # TODO test
         # send out text
         users = User.objects.filter(is_active=True).select_related('profile').values('username',
                                                                                      'profile__phone_number')
         for u in users:
             print(u)
-            client = Client(settings.TWILIO_ACC_SID, settings.TWILIO_AUTH_TOKEN)
+            client = Client(settings.TWILIO_ACC_SID,
+                            settings.TWILIO_AUTH_TOKEN)
             body = username + " has been added to marco_polo 🤗😎"
             try:
                 client.messages.create(
@@ -80,7 +82,8 @@ class LoginAPI(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data
-        userData = UserSerializer(user, context=self.get_serializer_context()).data
+        userData = UserSerializer(
+            user, context=self.get_serializer_context()).data
         print(userData)
         if userData['profile']['firstlogin']:
             return Response({
@@ -101,7 +104,8 @@ class LoginAPI(generics.GenericAPIView):
             except Exception as err:
                 traceback.print_exc()
             # send text
-            client = Client(settings.TWILIO_ACC_SID, settings.TWILIO_AUTH_TOKEN)
+            client = Client(settings.TWILIO_ACC_SID,
+                            settings.TWILIO_AUTH_TOKEN)
             body = "Your marco_polo 2-factor code is: " + code
             message = client.messages.create(
                 body=body,
@@ -117,6 +121,7 @@ class LoginFactorAPI(generics.GenericAPIView):
     """
       Check if code for given user is correct and respond with token
     """
+
     def post(self, request, *args, **kwargs):
         try:
             user = User.objects.get(username=request.data['username'])
@@ -133,13 +138,18 @@ class LoginFactorAPI(generics.GenericAPIView):
         code = request.data['code']
         isAdmin = user.is_staff
         user = login_serializer.validated_data
+        userData = User.objects.get(id=user.id)
 
         if code == user_prof.code:
-            print("here")
             return Response({
                 "message": "code correct",
                 "token": AuthToken.objects.create(user),
-                "isAdmin": isAdmin
+                "isAdmin": isAdmin,
+                "user": {
+                    'id': userData.id,
+                    'first_name': userData.first_name,
+                    'last_name': userData.last_name
+                }
             })
         else:
             return Response({
@@ -163,7 +173,8 @@ class FirstLoginAPI(generics.GenericAPIView):
         authorized_user = serializer.validated_data
         # update auth_user
         user = User.objects.get(username=request.data['username'])
-        user_serializer = UpdateAuthUserSerializer(user, data=request.data, partial=True)
+        user_serializer = UpdateAuthUserSerializer(
+            user, data=request.data, partial=True)
         if user_serializer.is_valid():
             user_serializer.save()
         else:
@@ -172,7 +183,8 @@ class FirstLoginAPI(generics.GenericAPIView):
             })
         profile = UserProfile.objects.get(user=user)
         request.data['firstlogin'] = False
-        profile_serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+        profile_serializer = UserProfileSerializer(
+            profile, data=request.data, partial=True)
         if profile_serializer.is_valid():
             profile_serializer.save()
         else:
