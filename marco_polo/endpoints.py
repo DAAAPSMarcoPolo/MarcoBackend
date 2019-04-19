@@ -13,6 +13,7 @@ from marco_polo.api.live import LiveAPI, StrategyLiveInstanceAPI
 from marco_polo.api.backtest import BacktestVoteAPI
 from marco_polo.api.strategy_backtests import StrategyBacktests
 from marco_polo.api.tradelogs import TradeLogsAPI
+from marco_polo.api.live_funds import LiveFundsApi
 
 router = routers.DefaultRouter()
 
@@ -56,5 +57,6 @@ urlpatterns = [
   url("^live/(?P<id>\d+)/$", LiveAPI.as_view()),
   url("^strategyliveinstances/(?P<id>\d+)/$", StrategyLiveInstanceAPI.as_view()),
   url("^tradelogs/$", TradeLogsAPI.as_view()),
-  url("^tradelogs/(?P<id>\d+)/$", TradeLogsAPI.as_view())
+  url("^tradelogs/(?P<id>\d+)/$", TradeLogsAPI.as_view()),
+  url("^buyingpower/$", LiveFundsApi.as_view())
 ]
