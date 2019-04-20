@@ -347,29 +347,29 @@ class BTStats:
             sharpe = round(diff_return / s_d, 2)
         return sharpe
 
-
-class PrintColors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
-
-# Demo Backtests
-
-# Correct Strategy
-class Keys:
-    def __init__(self, key_id, secret_key):
-        self.key_id = key_id
-        self.secret_key = secret_key
-keys = Keys('PK3MIMJUUKM3UT7QCLNA', '/B6IuGjp8JmhCPWkMfILmYbS91i1c4L9p02oTV9e')
-bt = Backtest('mean_reversion', 1000, Universe, '2018-1-1', '2019-2-13', keys=keys)
-bt.run()
-btStats = BTStats(bt)
+#
+# class PrintColors:
+#     HEADER = '\033[95m'
+#     OKBLUE = '\033[94m'
+#     OKGREEN = '\033[92m'
+#     WARNING = '\033[93m'
+#     FAIL = '\033[91m'
+#     ENDC = '\033[0m'
+#     BOLD = '\033[1m'
+#     UNDERLINE = '\033[4m'
+#
+#
+# # Demo Backtests
+#
+# # Correct Strategy
+# class Keys:
+#     def __init__(self, key_id, secret_key):
+#         self.key_id = key_id
+#         self.secret_key = secret_key
+# keys = Keys('PK3MIMJUUKM3UT7QCLNA', '/B6IuGjp8JmhCPWkMfILmYbS91i1c4L9p02oTV9e')
+# bt = Backtest('mean_reversion', 1000, Universe, '2018-1-1', '2019-2-13', keys=keys)
+# bt.run()
+# btStats = BTStats(bt)
 #time.sleep(.1)
 #
 # print(PrintColors.OKGREEN)
