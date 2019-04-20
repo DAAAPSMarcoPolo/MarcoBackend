@@ -212,9 +212,14 @@ class Backtest:
         daily_pct_made = (self.current_funds - self.initial_funds) / self.initial_funds
         self.daily_returns.append(daily_pct_made)
 
-        allocated_funds = self.buying_power / num_avail_pos
-
         stock_to_buy_tuples = self.strategy.stocks_to_buy(curr_portfolio, daily_data)
+        count = 0.0
+        for symbol in stock_to_buy_tuples:
+            if symbol not in self.open_positions:
+                count =  count + 1.0
+
+        allocated_funds = float(self.buying_power) / count
+
         for tup in stock_to_buy_tuples:
             self.buy(tup[0], tup[1], curr_date, allocated_funds)
 
