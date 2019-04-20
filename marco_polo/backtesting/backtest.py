@@ -25,6 +25,7 @@ class Backtest:
         self.strategy_name = strategy
         self.initial_funds = float(initial_funds)
         self.current_funds = float(initial_funds)
+        self.buying_power = float(initial_funds)
         self.daily_returns = []
         self.universe = universe
         self.start_date = start_date
@@ -59,7 +60,6 @@ class Backtest:
             return [False, e]
 
         return [True, 'imported successfully']
-
 
     # Validation Script
     def validate_strategy(self):
@@ -156,6 +156,7 @@ class Backtest:
 
             if qty > 0:
                 self.open_positions[symbol] = Position(symbol, entry_time, entry_price, qty)
+                self.buying_power = self.buying_power - (entry_price * qty)
 
     def sell(self, symbol, exit_price, exit_time):
         # Close our open position and add it to our completed trades
@@ -164,6 +165,7 @@ class Backtest:
         p_l = self.open_positions[symbol].qty * (exit_price - self.open_positions[symbol].entry_price)
         self.performance.append((exit_time, self.current_funds+p_l))
         self.current_funds = self.current_funds + p_l
+        self.buying_power = self.buying_power + p_l
         del self.open_positions[symbol]
 
     def daily_data_dict(self):
@@ -203,13 +205,14 @@ class Backtest:
 
         stock_to_sell_tuples = self.strategy.stocks_to_sell(curr_portfolio, daily_data)
 
+        num_avail_pos = self.strategy.portfolio_size - len(stock_to_sell_tuples)
         for tup in stock_to_sell_tuples:
             self.sell(tup[0], tup[1], curr_date)
 
         daily_pct_made = (self.current_funds - self.initial_funds) / self.initial_funds
         self.daily_returns.append(daily_pct_made)
 
-        allocated_funds = self.current_funds / self.strategy.portfolio_size
+        allocated_funds = self.buying_power / num_avail_pos
 
         stock_to_buy_tuples = self.strategy.stocks_to_buy(curr_portfolio, daily_data)
         for tup in stock_to_buy_tuples:
@@ -355,10 +358,10 @@ class BTStats:
 #     BOLD = '\033[1m'
 #     UNDERLINE = '\033[4m'
 #
-
+#
 # # Demo Backtests
 #
-# Correct Strategy
+# # Correct Strategy
 # class Keys:
 #     def __init__(self, key_id, secret_key):
 #         self.key_id = key_id
