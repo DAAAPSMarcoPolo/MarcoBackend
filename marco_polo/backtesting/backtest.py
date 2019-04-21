@@ -148,14 +148,17 @@ class Backtest:
 
     def buy(self, symbol, entry_price, entry_time, allocated_funds):
         # buy the stock if we do not have it in our portfolio
+        qty = 0
         if symbol not in self.open_positions:
-            if allocated_funds == 0 or entry_price == 0:
+            #print(allocated_funds)
+            if allocated_funds <= 0 or entry_price == 0:
                 qty = 0
             else:
                 qty = math.floor(allocated_funds / entry_price)
 
             if qty > 0:
                 self.open_positions[symbol] = Position(symbol, entry_time, entry_price, qty)
+                print('buying', symbol, 'for', str((entry_price * qty)))
                 self.buying_power = self.buying_power - (entry_price * qty)
 
     def sell(self, symbol, exit_price, exit_time):
@@ -163,9 +166,11 @@ class Backtest:
         self.trades.append(Trade(self.open_positions[symbol], exit_time, exit_price))
 
         p_l = self.open_positions[symbol].qty * (exit_price - self.open_positions[symbol].entry_price)
-        self.performance.append((exit_time, self.current_funds+p_l))
         self.current_funds = self.current_funds + p_l
-        self.buying_power = self.buying_power + p_l
+        print(self.current_funds)
+        self.buying_power = self.buying_power + exit_price*self.open_positions[symbol].qty
+        print(self.buying_power)
+        print('selling', symbol, 'for', str(p_l), 'profit')
         del self.open_positions[symbol]
 
     def daily_data_dict(self):
@@ -198,7 +203,6 @@ class Backtest:
     def manage_portfolio(self, daily_data, curr_date):
         #print (curr_date)
         curr_portfolio = []
-
         for position in self.open_positions:
             symbol = self.open_positions[position].symbol
             curr_portfolio.append(symbol)
@@ -209,6 +213,7 @@ class Backtest:
         for tup in stock_to_sell_tuples:
             self.sell(tup[0], tup[1], curr_date)
 
+
         daily_pct_made = (self.current_funds - self.initial_funds) / self.initial_funds
         self.daily_returns.append(daily_pct_made)
 
@@ -216,12 +221,15 @@ class Backtest:
         count = 0.0
         for symbol in stock_to_buy_tuples:
             if symbol not in self.open_positions:
-                count =  count + 1.0
-
-        allocated_funds = float(self.buying_power) / count
+                count = count + 1.0
+            if count == 0.0:
+                allocated_funds = 0
+            else:
+                allocated_funds = float(self.buying_power) / count
 
         for tup in stock_to_buy_tuples:
             self.buy(tup[0], tup[1], curr_date, allocated_funds)
+        #print(self.buying_power)
 
     def simulate(self):
         self.logger.info('Running Backtest...')
@@ -230,18 +238,36 @@ class Backtest:
         day = timedelta(days=1)
         curr_date = datetime.strptime(self.start_date, '%Y-%m-%d').date()
         last_date = datetime.strptime(self.end_date, '%Y-%m-%d').date() + day
-        self.performance.append((curr_date, self.initial_funds))
         while curr_date <= last_date:
+            self.performance.append((curr_date, self.current_funds))
             if curr_date in daily_dict:
                 daily_data = daily_dict[curr_date]
                 self.manage_portfolio(daily_data, curr_date)
             curr_date = curr_date + day
 
+        curr_portfolio = []
+        for position in self.open_positions:
+            symbol = self.open_positions[position].symbol
+            curr_portfolio.append(symbol)
+
+        not_found = True
+        while not_found:
+            try:
+                data = daily_dict[curr_date]
+                for stock in curr_portfolio:
+                    self.sell(stock, data.loc[stock]['open'], curr_date)
+                not_found = False
+            except Exception as e:
+                print(e)
+                curr_date = curr_date - day
+                pass
+
+        self.current_funds = self.buying_power
+
+
         self.logger.info('Finished Backtest.')
         stats = BTStats(self)
         summary = stats.summary
-        print(self.performance[-1])
-        print(self.current_funds)
         return [True, summary]
 
     def run(self):
@@ -352,20 +378,20 @@ class BTStats:
             sharpe = round(diff_return / s_d, 2)
         return sharpe
 
-#
-# class PrintColors:
-#     HEADER = '\033[95m'
-#     OKBLUE = '\033[94m'
-#     OKGREEN = '\033[92m'
-#     WARNING = '\033[93m'
-#     FAIL = '\033[91m'
-#     ENDC = '\033[0m'
-#     BOLD = '\033[1m'
-#     UNDERLINE = '\033[4m'
-#
-#
-# # Demo Backtests
-#
+
+class PrintColors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+# Demo Backtests
+
 # # Correct Strategy
 # class Keys:
 #     def __init__(self, key_id, secret_key):

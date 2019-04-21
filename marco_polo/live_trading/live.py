@@ -91,7 +91,7 @@ class Live:
 
         #update operating funds:
         p_l = position.qty * (position.close_price - position.entry_price)
-        self.operating_funds = self.operating_funds + p_l
+        self.operating_funds = self.operating_funds + position.qty*position.close_price
 
         users = User.objects.values('username', 'is_active', 'is_staff')
         client = Client(settings.TWILIO_ACC_SID,
@@ -179,7 +179,6 @@ class Live:
         live_instance.live = True
         live_instance.pid = os.getpid()
         live_instance.save()
-        print(self.trading_day())
         if self.trading_day():
             self.import_strategy()
             self.init_price_map()
