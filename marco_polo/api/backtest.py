@@ -107,7 +107,7 @@ class BacktestAPI(generics.GenericAPIView):
                     'sell_time': trade.exit_time,
                     'buy_price': trade.entry_price,
                     'sell_price': trade.exit_price,
-                    'qty': trade.exit_price
+                    'qty': trade.qty
                 }
                 BacktestTrade.objects.create(**new_trade)
             for performace in backtest.performance:
@@ -123,7 +123,7 @@ class BacktestAPI(generics.GenericAPIView):
             bt.complete = False
             body = "Your backtest on \'" + strategy_name + "\'" + ' between ' + backtest.start_date + ' and ' + \
                    backtest.end_date + \
-                ' has failed with the following message: \n\n' + result[1]
+                ' has failed with the following message: \n\n' + str(result[1])
 
         try:
             client.messages.create(
