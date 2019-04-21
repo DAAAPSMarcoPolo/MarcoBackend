@@ -17,8 +17,8 @@ from datetime import datetime
 
 
 class LiveAPI(generics.GenericAPIView):
-    # authentication_classes = (TokenAuthentication,)
-    # permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
         try:
@@ -37,7 +37,9 @@ class LiveAPI(generics.GenericAPIView):
                 live_instance_id = new_live_instance.id
                 new_live_instance.save()
                 live_instance = live.Live(live_instance_id, strategy, universe, funds, keys)
-
+                strategy_islive = Strategy.objects.get(id=backtest.strategy.id)
+                strategy_islive.live = True
+                strategy_islive.save()
                 from django import db
                 db.connections.close_all()
                 p = Process(target=self.run_live, args=(live_instance,), daemon=True)
@@ -51,7 +53,11 @@ class LiveAPI(generics.GenericAPIView):
                 print('here')
                 try:
                     live_instance.live = False
-                    live_instance.save()
+                    live_instance.save() 
+                    backtest = Backtest.objects.get(id=live_instance.backtest.id)
+                    strategy = Strategy.objects.get(id=backtest.strategy.id)
+                    strategy.live = False
+                    strategy.save()
                     try:
                         p = psutil.Process(live_instance.pid)
                         p.terminate()

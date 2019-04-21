@@ -31,7 +31,7 @@ class StrategyBacktests(generics.GenericAPIView):
                 bt['pct_gain'] = (
                     bt['end_cash']-bt['initial_cash']) / bt['initial_cash']
                 trades = BacktestTrade.objects.filter(
-                    backtest=backtest.id).values()
+                    backtest=backtest.id).order_by('buy_time').values()
                 graph = BacktestGraph.objects.filter(
                     backtest=backtest.id).order_by('date').values()
                 for g in graph:
