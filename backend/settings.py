@@ -31,7 +31,7 @@ environ.Env.read_env()
 SECRET_KEY = 'i4d4ojj4$occ@yl9t(t6-pnuc#&k59dpypy@_2-7&ie#6$tgz2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG=(bool, True)
+DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = ['159.89.230.12', '0.0.0.0', '127.0.0.1', 'marcopoloinvestment.club', 'localhost']
 
