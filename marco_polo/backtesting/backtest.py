@@ -239,7 +239,8 @@ class Backtest:
         curr_date = datetime.strptime(self.start_date, '%Y-%m-%d').date()
         last_date = datetime.strptime(self.end_date, '%Y-%m-%d').date() + day
         while curr_date <= last_date:
-            self.performance.append((curr_date, self.current_funds))
+            if curr_date != last_date:
+                self.performance.append((curr_date, self.current_funds))
             if curr_date in daily_dict:
                 daily_data = daily_dict[curr_date]
                 self.manage_portfolio(daily_data, curr_date)
@@ -263,6 +264,7 @@ class Backtest:
                 pass
 
         self.current_funds = self.buying_power
+        self.performance.append((curr_date+day, self.current_funds))
 
 
         self.logger.info('Finished Backtest.')

@@ -107,6 +107,8 @@ class LiveTradeInstance(models.Model):
     backtest = models.ForeignKey(Backtest, on_delete=models.CASCADE)
     pid = models.IntegerField(null=True)
     live = models.BooleanField(null=False, default=True)
+    starting_cash = models.FloatField(null=True)
+    buying_power = models.FloatField(null=True)
 
 
 class LiveTradeInstancePosition(models.Model):
