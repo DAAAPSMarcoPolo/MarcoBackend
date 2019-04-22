@@ -2,7 +2,7 @@ from django.conf.urls import include, url
 from rest_framework import routers
 
 from marco_polo.api.login import AdminRegistrationAPI, AddUserAPI, LoginAPI, FirstLoginAPI, LoginFactorAPI
-from marco_polo.api.user import UserManagementAPI, PictureAPI, UserSettingsAPI
+from marco_polo.api.user import UserManagementAPI, PictureAPI, UserSettingsAPI, UserVotesAPI
 from marco_polo.api.api_keys import AlpacaKeysAPI
 from marco_polo.api.strategy import AlgorithmAPI, StrategyAPI
 from marco_polo.api.universe import UniverseAPI
@@ -21,6 +21,7 @@ urlpatterns = [
     url("^", include(router.urls)),
     url("users/list/$", UserManagementAPI.as_view()),
     url("user/settings/$", UserSettingsAPI.as_view()),
+    url("user/(?P<id>\d+)/votes$", UserVotesAPI.as_view()),
     url("^auth/adduser/$", AddUserAPI.as_view()),
     # TODO remove in production
     # register the admin initially
