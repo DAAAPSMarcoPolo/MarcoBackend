@@ -110,9 +110,20 @@ class LiveAPI(generics.GenericAPIView):
             live_instance = LiveTradeInstance.objects.get(id=id)
             live_instance = LiveTradeInstanceSerializer(live_instance, context=self.get_serializer_context()).data
             positions = LiveTradeInstancePosition.objects.filter(live_trade_instance=id).values()
+            closed_positions = LiveTradeInstancePosition.objects.filter(live_trade_instance=live_instance.id, open=False)
+            initvalue = 0
+            finalvalue = 0
+            for pos in closed_positions: 
+                initvalue += pos.open_price * pos.qty
+                finalvalue += pos.close_price * pos.qty
+            if initvalue != 0:
+                pct_gain = (finalvalue - initvalue) / initvalue  
+            else:
+                pct_gain = 0           
             live_instance_details = {
                 'live_instance': live_instance,
-                'trades': positions
+                'trades': positions,
+                'pct_gain': pct_gain
             }
             return Response(live_instance_details, status=status.HTTP_200_OK)
         except:
@@ -121,9 +132,20 @@ class LiveAPI(generics.GenericAPIView):
             for live_instance in live_instances:
                 li = LiveTradeInstanceSerializer(live_instance, context=self.get_serializer_context()).data
                 positions = LiveTradeInstancePosition.objects.filter(live_trade_instance=live_instance.id).values()
+                closed_positions = LiveTradeInstancePosition.objects.filter(live_trade_instance=live_instance.id, open=False)
+                initvalue = 0
+                finalvalue = 0
+                for pos in closed_positions: 
+                    initvalue += pos.open_price * pos.qty
+                    finalvalue += pos.close_price * pos.qty
+                if initvalue != 0:
+                    pct_gain = (finalvalue - initvalue) / initvalue  
+                else:
+                    pct_gain = 0   
                 live_instance_details = {
                     'live_instance': li,
-                    'trades': positions
+                    'trades': positions, 
+                    'pct_gain': pct_gain
                 }
                 all_live_instances.append(live_instance_details)
             return Response(all_live_instances, status=status.HTTP_200_OK)

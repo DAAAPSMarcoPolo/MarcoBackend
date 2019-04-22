@@ -587,7 +587,8 @@ Response:
             "open_price": 2,
             "close_price": 3
         }
-    ]
+    ],
+    "pct_gain": 10
 }
 ```
 
@@ -626,7 +627,8 @@ Response:
                 "open_price": 2,
                 "close_price": 3
             }
-        ]
+        ],
+        "pct_gain": 10
     },
     {
         "live_instance": {
@@ -658,7 +660,8 @@ Response:
                 "open_price": 2,
                 "close_price": 3
             }
-        ]
+        ],
+        "pct_gain": 10
     }
 ]
 
