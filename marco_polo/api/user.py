@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions, generics
 from rest_framework.response import Response
 from rest_framework import status
 from knox.auth import TokenAuthentication
-from marco_polo.models import UserProfile
+from marco_polo.models import UserProfile, BacktestVote
 from django.contrib.auth.models import User
 from django.conf import settings
 from twilio.rest import Client
@@ -106,3 +106,20 @@ class UserManagementAPI(generics.GenericAPIView):
                 print(e)
 
         return Response({"message": "user deleted."})
+
+
+class UserVotesAPI(generics.GenericAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            user_id = self.kwargs["id"]
+            votes = BacktestVote.objects.filter(
+                user=user_id).order_by('backtest').values('backtest', 'vote')
+            return Response({
+                'votes': votes
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
