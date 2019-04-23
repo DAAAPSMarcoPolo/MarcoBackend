@@ -33,7 +33,7 @@ class LiveAPI(generics.GenericAPIView):
                 strategy = Path(strategy.strategy_file.path).stem
                 universe = UsedUniverse.objects.get(id=backtest.universe.id)
                 universe = UsedUniverseSerializer(universe, context=self.get_serializer_context()).data['stocks']
-                new_live_instance = LiveTradeInstance.objects.create(backtest_id=backtest_id, live=False)
+                new_live_instance = LiveTradeInstance.objects.create(backtest_id=backtest_id, live=False, starting_cash = funds, buying_power=funds)
                 live_instance_id = new_live_instance.id
                 new_live_instance.save()
                 live_instance = live.Live(live_instance_id, strategy, universe, funds, keys)

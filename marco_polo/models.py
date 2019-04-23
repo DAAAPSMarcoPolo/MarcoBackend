@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from fernet_fields import EncryptedTextField
@@ -17,6 +18,7 @@ class UserProfile(models.Model):
     phone_number = models.CharField(max_length=20)
     code_created = models.DateTimeField(null=True)
     avatar = models.ImageField(upload_to='uploads/', blank=True, null=True)
+    reset_token = models.UUIDField(default=uuid.uuid4, editable=True)
 
 
 class AlpacaAPIKeys(models.Model):
@@ -107,6 +109,8 @@ class LiveTradeInstance(models.Model):
     backtest = models.ForeignKey(Backtest, on_delete=models.CASCADE)
     pid = models.IntegerField(null=True)
     live = models.BooleanField(null=False, default=True)
+    starting_cash = models.FloatField(null=True)
+    buying_power = models.FloatField(null=True)
 
 
 class LiveTradeInstancePosition(models.Model):

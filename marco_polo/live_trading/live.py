@@ -7,6 +7,7 @@ import schedule
 from datetime import datetime, timedelta
 import time
 import os
+import pandas as pd
 from marco_polo.models import LiveTradeInstance, LiveTradeInstancePosition, User
 
 from django.conf import settings
@@ -25,11 +26,13 @@ class Live:
         self.operating_funds = float(operating_funds)
         self.keys = keys
         self.price_map = None
+        self.daily_data = {}
         self.open_price_map = None
         self.open_positions = []
+
         self.api = tradeapi.REST(key_id=keys.key_id,
                                  secret_key=keys.secret_key,
-                                 base_url='https://paper-api.alpaca.markets/')
+                                 base_url='https://paper-api.alpaca.markets')
 
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO)
@@ -59,6 +62,7 @@ class Live:
     def init_price_map(self):
         self.logger.info('Fetching Data...')
         now = datetime.now()
+        today = now.strftime('%Y-%m-%d')
         start = now - timedelta(days=180)
 
         start = start.strftime('%Y-%m-%d')
@@ -76,6 +80,46 @@ class Live:
 
         return True
 
+    def daily_data_dict(self):
+        now = datetime.now()
+        today = now.strftime('%Y-%m-%d')
+        start = (now - timedelta(days=180)).strftime('%Y-%m-%d')
+
+        day = timedelta(days=1)
+        curr_date = datetime.strptime(start, '%Y-%m-%d').date()
+        last_date = datetime.strptime(today, '%Y-%m-%d').date() + day
+
+        now = datetime.now()
+        today = now.strftime('%Y-%m-%d')
+
+        data_by_date = {}
+        while curr_date < last_date:
+            data_by_date[curr_date] = pd.DataFrame()
+            for symbol in self.price_map.keys():
+                symbol_df = self.price_map[str(symbol)]
+                # Make sure there is data for this day
+                if curr_date in symbol_df.index:
+                    symbol_data = symbol_df.loc[curr_date]
+                    symbol_data.reindex([symbol])
+                    symbol_data_dict = symbol_data.to_dict()
+                    symbol_data_dict['symbol'] = symbol
+                    data_by_date[curr_date] = data_by_date[curr_date].append(symbol_data_dict, ignore_index=True)
+
+            if len(data_by_date[curr_date].index) > 0:
+                data_by_date[curr_date] = data_by_date[curr_date].set_index('symbol')
+            else:
+                del data_by_date[curr_date]
+
+            curr_date = curr_date + day
+
+        last_key = sorted(data_by_date.keys())[-1]
+        last = data_by_date[last_key]
+        not_found = False
+        data_by_date[today] = last
+        for stock in last:
+            data_by_date[today].loc[stock, 'open'] = self.api.polygon.last_quote(symbol=symbol).askprice
+        self.daily_data = data_by_date
+
     def sell(self, symbol):
         now = datetime.now()
         position = LiveTradeInstancePosition.objects.filter(id=self.id, open=True, symbol=symbol)[0]
@@ -84,6 +128,10 @@ class Live:
                                          side='sell',
                                          type='market',
                                          time_in_force='gtc')
+        status = response.status
+        order = response.id
+        while status != 'filled':
+            status = self.api.get_order(order_id=order).status
         position.close_date = now
         position.close_price = response.filled_avg_price
         position.open = False
@@ -92,7 +140,10 @@ class Live:
         #update operating funds:
         p_l = position.qty * (position.close_price - position.entry_price)
         self.operating_funds = self.operating_funds + position.qty*position.close_price
-
+        self.buying_power = self.buying_power + position.close_price * position.qty
+        instance = LiveTradeInstance(id=self.id)
+        instance.buying_power = self.buying_power
+        instance.save()
         users = User.objects.values('username', 'is_active', 'is_staff')
         client = Client(settings.TWILIO_ACC_SID,
                         settings.TWILIO_AUTH_TOKEN)
@@ -110,53 +161,71 @@ class Live:
 
     def buy(self, symbol, max_funds, qty=None):
         now = datetime.now()
-        ask = self.api.last_quote(symbol=symbol).ask
+        ask = self.api.polygon.last_quote(symbol=symbol).askprice
 
         if qty is None:
             qty = float(max_funds) / float(ask)
 
+        print(qty)
+
         response = None
+        print('buying', symbol)
         try:
             response = self.api.submit_order(symbol=symbol,
                                              qty=qty,
                                              side='buy',
                                              type='market',
                                              time_in_force='gtc')
-        except:
+            print(response)
+            status = response.status
+            order = response.id
+            while status != 'filled':
+                status = self.api.get_order(order_id=order).status
+
+            position = LiveTradeInstancePosition.objects.create(live_trade_instance_id=self.id,
+                                                                symbol=symbol,
+                                                                open_date=response.filled_at,
+                                                                open_price=response.filled_avg_price,
+                                                                qty=qty,
+                                                                open=True)
+            equity = response.filled_avg_price * qty
+            self.operating_funds = self.operating_funds - equity
+            self.buying_power = self.buying_power - (response.filled_avg_price * qty)
+            instance = LiveTradeInstance(id=self.id)
+            instance.buying_power = self.buying_power
+            instance.save()
+
+            users = User.objects.values('username', 'is_active', 'is_staff')
+            client = Client(settings.TWILIO_ACC_SID,
+                            settings.TWILIO_AUTH_TOKEN)
+            body = self.strategy_name + " has bought " + str(
+                position.qty) + " shares of " + symbol + "for a P/L of: " + str(equity)
+            for u in users:
+                try:
+                    client.messages.create(
+                        body=body,
+                        from_='8475586630',
+                        to=u['profile__phone_number']
+                    )
+                except Exception as e:
+                    print("Twilio error:")
+                    print(e)
+        except Exception as e :
+            print(e)
             self.buy(symbol, max_funds, qty-1)
+        print(response)
 
-        position = LiveTradeInstancePosition.objects.create(live_trade_instance_id=self.id,
-                                                            symbol=symbol,
-                                                            open_date=response.filled_at,
-                                                            open_price=response.filled_avg_price,
-                                                            qty=qty,
-                                                            open=True)
-        equity = response.filled_avg_price * qty
-        self.operating_funds = self.operating_funds - equity
-
-        users = User.objects.values('username', 'is_active', 'is_staff')
-        client = Client(settings.TWILIO_ACC_SID,
-                        settings.TWILIO_AUTH_TOKEN)
-        body = self.strategy_name + " has bought " + str(position.qty) + " shares of " + symbol + "for a P/L of: " + str(equity)
-        for u in users:
-            try:
-                client.messages.create(
-                    body=body,
-                    from_='8475586630',
-                    to=u['profile__phone_number']
-                )
-            except Exception as e:
-                print("Twilio error:")
-                print(e)
 
     def manage_portfolio(self):
-        open_positions = LiveTradeInstancePosition.objects.filter(id=self.id, open=True)
+        today = datetime.now().strftime('%Y-%m-%d')
+        daily_data = self.daily_data[today]
+        open_positions = LiveTradeInstancePosition.objects.filter(live_trade_instance_id=self.id, open=True)
 
         curr_portfolio = []
         for position in open_positions:
             curr_portfolio.append(position.symbol)
-
-        stock_to_sell_tuples = self.strategy.stocks_to_sell(curr_portfolio, self.price_map)
+        print (curr_portfolio)
+        stock_to_sell_tuples = self.strategy.stocks_to_sell(curr_portfolio, daily_data)
 
         for tup in stock_to_sell_tuples:
             self.sell(tup[0])
@@ -164,9 +233,11 @@ class Live:
         open_positions = LiveTradeInstancePosition.objects.filter(id=self.id, open=True)
         allocated_funds = self.operating_funds / (self.strategy.portfolio_size - len(open_positions))
 
-        stock_to_buy_tuples = self.strategy.stocks_to_buy(curr_portfolio, self.price_map)
+        stock_to_buy_tuples = self.strategy.stocks_to_buy(curr_portfolio, daily_data)
+        allocated_funds = LiveTradeInstance.objects.filter(id=self.id)[0].buying_power
+        print(stock_to_buy_tuples)
         for tup in stock_to_buy_tuples:
-            self.buy(tup[0], tup[1], allocated_funds)
+            self.buy(tup[0], allocated_funds)
 
     def trading_day(self):
         clock = self.api.get_clock()
@@ -182,11 +253,13 @@ class Live:
         if self.trading_day():
             self.import_strategy()
             self.init_price_map()
-            schedule.every().monday.at("09:30").do(self.manage_portfolio)
-            schedule.every().tuesday.at("09:30").do(self.manage_portfolio)
-            schedule.every().wednesday.at("09:30").do(self.manage_portfolio)
-            schedule.every().thursday.at("09:30").do(self.manage_portfolio)
-            schedule.every().friday.at("09:30").do(self.manage_portfolio)
+            self.daily_data_dict()
+            self.manage_portfolio()
+            # schedule.every().monday.at("09:30").do(self.manage_portfolio)
+            # schedule.every().tuesday.at("09:30").do(self.manage_portfolio)
+            # schedule.every().wednesday.at("09:30").do(self.manage_portfolio)
+            # schedule.every().thursday.at("09:30").do(self.manage_portfolio)
+            # schedule.every().friday.at("09:30").do(self.manage_portfolio)
 
         while True:
             schedule.run_pending()
