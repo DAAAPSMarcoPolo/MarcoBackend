@@ -36,6 +36,8 @@ class StrategyBacktests(generics.GenericAPIView):
                     backtest=backtest.id).order_by('date').values()
                 for g in graph:
                     g['date'] = g['date'].strftime('%m/%d/%Y')
+                for t in trades:
+                    t['p_l'] = float(t['sell_price'] - t['buy_price']) / float(t['buy_price'])
                 votes = {
                     'status': bt['vote_status'],
                     'list': vote_list

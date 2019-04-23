@@ -162,12 +162,13 @@ class BacktestAPI(generics.GenericAPIView):
                 backtest=id).order_by('date').values()
             for g in graph:
                 g['date'] = g['date'].strftime('%m/%d/%Y')
+            for t in trades:
+                t['p_l'] = float(t['sell_price'] - t['buy_price']) / float(t['buy_price'])
             backest_details = {
                 'backtest': backtest,
                 'trades': trades,
                 'graph': graph
             }
-
             return Response(backest_details, status=status.HTTP_200_OK)
 
         except Exception as e:
@@ -185,6 +186,8 @@ class BacktestAPI(generics.GenericAPIView):
                     backtest=backtest.id).order_by('date').values()
                 for g in graph:
                     g['date'] = g['date'].strftime('%m/%d/%Y')
+                for t in trades:
+                    t['p_l'] = float(t['sell_price'] - t['buy_price']) / float(t['buy_price'])
                 backest_details = {
                     'backtest': backtest,
                     'trades': trades,
