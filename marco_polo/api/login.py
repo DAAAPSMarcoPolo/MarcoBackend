@@ -14,6 +14,7 @@ from datetime import datetime
 from django.utils.crypto import get_random_string
 from django.conf import settings
 from twilio.rest import Client
+import uuid
 
 
 class AdminRegistrationAPI(generics.GenericAPIView):
@@ -194,3 +195,44 @@ class FirstLoginAPI(generics.GenericAPIView):
         return Response({
             "message": "profile updated."
         })
+
+
+class ResetPasswordAPI(generics.GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            data = request.data
+            username = data['username']
+            user = User.objects.get(username=username)
+            reset_token = uuid.uuid4()
+            UserProfile.objects.filter(user=user).update(
+                reset_token=reset_token)
+            message = "Your reset password link is: http://localhost:3000/reset/" + \
+                str(reset_token)
+            Utils.send_email(
+                self, message, "MarcoPolo Invesments - Reset password", [username])
+            response_message = 'Email sent to ' + username
+            return Response({'message': response_message}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            if str(e) == "User matching query does not exist.":
+                return Response({'error': 'Could not find account with that username.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'There was an error sending an email to that address.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, *args, **kwargs):
+        try:
+            data = request.data
+            token = self.kwargs['reset_token']
+            username = request.data['username']
+            new_password = request.data['new_password']
+            user = User.objects.get(username=username)
+            user_profile = UserProfile.objects.get(user=user)
+            if (str(user_profile.reset_token) != str(token)):
+                return Response({'error': 'That token has expired.'}, status=status.HTTP_400_BAD_REQUEST)
+            user.set_password(new_password)
+            user_profile.reset_token = uuid.uuid4()
+            user_profile.save()
+            user.save()
+            return Response({'message': 'Password reset.'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            return Response({'error': 'There was an error setting your new password.'}, status=status.HTTP_400_BAD_REQUEST)
