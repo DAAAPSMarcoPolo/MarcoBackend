@@ -229,7 +229,6 @@ class Live:
         for position in open_positions:
             curr_portfolio.append(position.symbol)
         stock_to_sell_tuples = self.strategy.stocks_to_sell(curr_portfolio, daily_data)
-        stock_to_sell_tuples.append(('TTWO', 20))
         for tup in stock_to_sell_tuples:
             self.sell(tup[0])
 
@@ -237,16 +236,15 @@ class Live:
         if len(stocks) > 0:
             body = self.strategy_name + " has sold " + str(stocks)
             for u in users:
-                if u['username'] == 'piottid97@gmail.com':
-                    try:
-                        client.messages.create(
-                            body=body,
-                            from_='8475586630',
-                            to=u['profile__phone_number']
-                        )
-                    except Exception as e:
-                        print("Twilio error:")
-                        print(e)
+                try:
+                    client.messages.create(
+                        body=body,
+                        from_='8475586630',
+                        to=u['profile__phone_number']
+                    )
+                except Exception as e:
+                    print("Twilio error:")
+                    print(e)
 
         self.selling = []
         open_positions = LiveTradeInstancePosition.objects.filter(backtest_id=instance.backtest_id, open=True)
@@ -273,16 +271,15 @@ class Live:
         if len(self.buying) > 0:
             body = self.strategy_name + " has bought " + str(self.buying)
             for u in users:
-                if u['username'] == 'piottid97@gmail.com':
-                    try:
-                        client.messages.create(
-                            body=body,
-                            from_='8475586630',
-                            to=u['profile__phone_number']
-                        )
-                    except Exception as e:
-                        print("Twilio error:")
-                        print(e)
+                try:
+                    client.messages.create(
+                        body=body,
+                        from_='8475586630',
+                        to=u['profile__phone_number']
+                    )
+                except Exception as e:
+                    print("Twilio error:")
+                    print(e)
             self.buying = []
 
     def trading_day(self):
@@ -307,16 +304,18 @@ class Live:
         live_instance.live = True
         live_instance.pid = os.getpid()
         live_instance.save()
-        # self.import_strategy()
-        # self.init_price_map()
-        # self.daily_data_dict()
-        # self.manage_portfolio()
-        # schedule.every().monday.at("09:30").do(self.startup)
-        schedule.every().tuesday.at("18:15").do(self.startup)
-        schedule.every().tuesday.at("18:16").do(self.trade)
-        # schedule.every().wednesday.at("09:30").do(self.startup)
-        # schedule.every().thursday.at("09:30").do(self.startup)
-        # schedule.every().friday.at("09:30").do(self.startup)
+
+        schedule.every().monday.at("15:00").do(self.startup)
+        schedule.every().tuesday.at("15:00").do(self.startup)
+        schedule.every().wednesday.at("15:00").do(self.startup)
+        schedule.every().thursday.at("15:00").do(self.startup)
+        schedule.every().friday.at("15:00").do(self.startup)
+
+        schedule.every().monday.at("15:30").do(self.trade)
+        schedule.every().tuesday.at("15:30").do(self.trade)
+        schedule.every().wednesday.at("15:30").do(self.trade)
+        schedule.every().thursday.at("15:30").do(self.trade)
+        schedule.every().friday.at("15:30").do(self.trade)
 
         while True:
             schedule.run_pending()

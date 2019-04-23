@@ -59,6 +59,12 @@ class LiveAPI(generics.GenericAPIView):
                     strategy.live = False
                     strategy.save()
                     try:
+                        try:
+                            os.kill(pid, 0)
+                        except OSError:
+                            return False
+                        else:
+                            return True
                         p = psutil.Process(live_instance.pid)
                         p.terminate()
                     except:
