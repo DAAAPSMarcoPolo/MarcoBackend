@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions, generics
 from rest_framework.response import Response
 from rest_framework import status
 from knox.auth import TokenAuthentication
-from marco_polo.models import UserProfile, BacktestVote
+from marco_polo.models import UserProfile, Strategy, BacktestVote
 from django.contrib.auth.models import User
 from django.conf import settings
 from twilio.rest import Client
@@ -115,10 +115,24 @@ class UserVotesAPI(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         try:
             user_id = self.kwargs["id"]
+            data = []
+            strats = Strategy.objects.all()
+            for strategy in strats:
+                backtests = strategy.backtest_set.select_related('backtestvote').filter(
+                    backtestvote__user=user_id).order_by('backtestvote__id').values('id', 'vote_status', 'backtestvote__vote')
+                s_obj = {
+                    'algorithm_name': strategy.name,
+                    'algorithm_id': strategy.id,
+                    'backtests': backtests
+                }
+                data.append(s_obj)
+
+            # TODO remove query below and 'votes': votes
             votes = BacktestVote.objects.filter(
                 user=user_id).order_by('backtest').values('backtest', 'vote')
             return Response({
-                'votes': votes
+                'votes': votes,
+                'vote_data': data
             }, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
