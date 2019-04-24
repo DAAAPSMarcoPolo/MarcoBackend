@@ -4,11 +4,8 @@ from rest_framework import status
 from knox.auth import TokenAuthentication
 from marco_polo.live_trading import live
 from marco_polo.models import LiveTradeInstance, LiveTradeInstancePosition, Backtest, UsedUniverse, Strategy, AlpacaAPIKeys
-from marco_polo.serializers import LiveTradeInstanceSerializer, LiveTradeInstancePositionerializer, UsedUniverseSerializer
-from django.conf import settings
-from twilio.rest import Client
+from marco_polo.serializers import LiveTradeInstanceSerializer, UsedUniverseSerializer
 from pathlib import Path
-import locale
 import psutil
 from multiprocessing import Process
 import threading
@@ -40,6 +37,12 @@ class LiveAPI(generics.GenericAPIView):
                 new_live_instance = LiveTradeInstance.objects.create(
                     backtest_id=backtest_id, live=False, starting_cash=funds, buying_power=funds)
                 live_instance_id = new_live_instance.id
+                bt_id = Backtest.objects.get(id=new_live_instance.backtest_id).id
+                live_backtest_instances = LiveTradeInstance.objects.filter(backtest_id=bt_id)
+                p_l = 0.0
+                for instance in live_backtest_instances:
+                    p_l = p_l + instance.pct_change_closed
+                new_live_instance.pct_change_closed = p_l
                 new_live_instance.save()
                 live_instance = live.Live(
                     live_instance_id, strategy, universe, funds, keys)
@@ -116,24 +119,41 @@ class LiveAPI(generics.GenericAPIView):
                 p.save()
 
     def get(self, request, *args, **kwargs):
+        keys = AlpacaAPIKeys.objects.get(id=1)
+        api = trade_api.REST(
+            key_id=keys.key_id,
+            secret_key=keys.secret_key,
+            base_url = 'https://paper-api.alpaca.markets'
+        )
         try:
             id = self.kwargs["id"]
             live_instance = LiveTradeInstance.objects.get(id=id)
-            live_instance = LiveTradeInstanceSerializer(
-                live_instance, context=self.get_serializer_context()).data
+
+            bt_id = Backtest.objects.get(id=live_instance.backtest_id).id
             positions = LiveTradeInstancePosition.objects.filter(
-                live_trade_instance=id).values()
+                backtest_id=bt_id)
             closed_positions = LiveTradeInstancePosition.objects.filter(
-                live_trade_instance=live_instance.id, open=False)
+                backtest_id=bt_id, open=False, live_trade_instance_id__lte=live_instance.id)
+            open_positions = LiveTradeInstancePosition.objects.filter(
+                backtest_id=bt_id, open=True, live_trade_instance_id__lte = live_instance.id)
             initvalue = 0
             finalvalue = 0
             for pos in closed_positions:
                 initvalue += pos.open_price * pos.qty
                 finalvalue += pos.close_price * pos.qty
+            for pos in open_positions:
+                initvalue += pos.open_price * pos.qty
+                curr_price = api.polygon.last_quote(symbol=pos.symbol).bidprice
+                finalvalue += curr_price * pos.qty
             if initvalue != 0:
                 pct_gain = (finalvalue - initvalue) / initvalue
             else:
                 pct_gain = 0
+
+            live_instance = LiveTradeInstanceSerializer(
+                live_instance, context=self.get_serializer_context()).data
+            positions = positions.values()
+            print(live_instance)
             live_instance_details = {
                 'live_instance': live_instance,
                 'trades': positions,
@@ -141,24 +161,35 @@ class LiveAPI(generics.GenericAPIView):
             }
             return Response(live_instance_details, status=status.HTTP_200_OK)
         except:
+            print('whoops')
             all_live_instances = []
             live_instances = LiveTradeInstance.objects.filter(live=True)
             for live_instance in live_instances:
-                li = LiveTradeInstanceSerializer(
-                    live_instance, context=self.get_serializer_context()).data
+
+                bt_id = Backtest.objects.get(id=live_instance.backtest_id).id
                 positions = LiveTradeInstancePosition.objects.filter(
-                    live_trade_instance=live_instance.id).values()
+                    backtest_id=bt_id)
                 closed_positions = LiveTradeInstancePosition.objects.filter(
-                    live_trade_instance=live_instance.id, open=False)
+                    backtest_id=bt_id, open=False, live_trade_instance_id__lte=live_instance.id)
+                open_positions = LiveTradeInstancePosition.objects.filter(
+                    backtest_id=bt_id, open=True, live_trade_instance_id__lte=live_instance.id)
                 initvalue = 0
                 finalvalue = 0
                 for pos in closed_positions:
                     initvalue += pos.open_price * pos.qty
                     finalvalue += pos.close_price * pos.qty
+                for pos in open_positions:
+                    initvalue += pos.open_price * pos.qty
+                    curr_price = api.polygon.last_quote(symbol=pos.symbol).bidprice
+                    finalvalue += curr_price * pos.qty
                 if initvalue != 0:
                     pct_gain = (finalvalue - initvalue) / initvalue
                 else:
                     pct_gain = 0
+
+                li = LiveTradeInstanceSerializer(
+                    live_instance, context=self.get_serializer_context()).data
+                positions = positions.values()
                 live_instance_details = {
                     'live_instance': li,
                     'trades': positions,

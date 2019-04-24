@@ -156,7 +156,8 @@ class Live:
             position.save()
 
             #update operating funds:
-            p_l = int(position.qty) * (float(position.close_price) - float(position.open_price))
+            #p_l = int(position.qty) * (float(position.close_price) - float(position.open_price))
+            #self.p_l = self.p_l + p_l
             self.operating_funds = self.operating_funds + int(position.qty)*float(position.close_price)
             self.buying_power = self.buying_power + float(position.close_price) * int(position.qty)
             instance.buying_power = self.buying_power
@@ -247,7 +248,9 @@ class Live:
                 except Exception as e:
                     print("Twilio error:")
                     print(e)
-
+        #instance.pct_change_closed = (self.p_l - instance.starting_cash) / instance.starting_cash
+        #instance.save()
+        #self.p_l = 0.0
         self.selling = []
         open_positions = LiveTradeInstancePosition.objects.filter(backtest_id=instance.backtest_id, open=True)
         temp = []

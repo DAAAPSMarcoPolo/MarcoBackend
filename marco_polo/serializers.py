@@ -162,7 +162,7 @@ class LiveTradeInstanceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class LiveTradeInstancePositionerializer(serializers.ModelSerializer):
+class LiveTradeInstancePositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = LiveTradeInstancePosition
         fields = '__all__'
