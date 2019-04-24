@@ -111,6 +111,7 @@ class LiveTradeInstance(models.Model):
     live = models.BooleanField(null=False, default=True)
     starting_cash = models.FloatField(null=True)
     buying_power = models.FloatField(null=True)
+    pct_change_closed = models.FloatField(null=True)
 
 
 class LiveTradeInstancePosition(models.Model):

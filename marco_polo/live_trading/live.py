@@ -33,6 +33,7 @@ class Live:
         self.open_positions = []
         self.buying = []
         self.selling = []
+        self.p_l = 0.0
 
         self.api = tradeapi.REST(key_id=keys.key_id,
                                  secret_key=keys.secret_key,
