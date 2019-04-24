@@ -129,7 +129,7 @@ class LiveAPI(generics.GenericAPIView):
 
             bt_id = Backtest.objects.get(id=live_instance.backtest_id).id
             positions = LiveTradeInstancePosition.objects.filter(
-                backtest_id=bt_id)
+                backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id)
             closed_positions = LiveTradeInstancePosition.objects.filter(
                 backtest_id=bt_id, open=False, live_trade_instance_id__lte=live_instance.id)
             open_positions = LiveTradeInstancePosition.objects.filter(
@@ -166,7 +166,7 @@ class LiveAPI(generics.GenericAPIView):
 
                 bt_id = Backtest.objects.get(id=live_instance.backtest_id).id
                 positions = LiveTradeInstancePosition.objects.filter(
-                    backtest_id=bt_id)
+                    backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id)
                 closed_positions = LiveTradeInstancePosition.objects.filter(
                     backtest_id=bt_id, open=False, live_trade_instance_id__lte=live_instance.id)
                 open_positions = LiveTradeInstancePosition.objects.filter(
@@ -218,7 +218,7 @@ class StrategyLiveInstanceAPI(generics.GenericAPIView):
                 bt = Backtest.objects.get(id=live_instance.backtest_id)
                 bt_id = bt.id
                 positions = LiveTradeInstancePosition.objects.filter(
-                    backtest_id=bt_id)
+                    backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id)
                 closed_positions = LiveTradeInstancePosition.objects.filter(
                     backtest_id=bt_id, open=False, live_trade_instance_id__lte=live_instance.id)
                 open_positions = LiveTradeInstancePosition.objects.filter(
