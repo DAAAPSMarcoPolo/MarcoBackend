@@ -206,7 +206,7 @@ class ResetPasswordAPI(generics.GenericAPIView):
             reset_token = uuid.uuid4()
             UserProfile.objects.filter(user=user).update(
                 reset_token=reset_token)
-            message = "Your reset password link is: http://localhost:3000/reset/" + \
+            message = "Your reset password link is: https://marcopoloinvestment.club/reset/" + \
                 str(reset_token)
             Utils.send_email(
                 self, message, "MarcoPolo Invesments - Reset password", [username])

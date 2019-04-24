@@ -34,12 +34,12 @@ class LiveAPI(generics.GenericAPIView):
                 universe = UsedUniverse.objects.get(id=backtest.universe.id)
                 universe = UsedUniverseSerializer(
                     universe, context=self.get_serializer_context()).data['stocks']
+                bt = Backtest.objects.get(id=backtest_id)
                 new_live_instance = LiveTradeInstance.objects.create(
-                    backtest_id=backtest_id, live=False, starting_cash=funds, buying_power=funds)
+                    backtest_id=backtest_id, live=False, starting_cash=funds, buying_power=funds, strategy_id=bt.strategy_id)
                 live_instance_id = new_live_instance.id
-                bt = Backtest.objects.get(id=new_live_instance.backtest_id)
                 bt_id = bt.id
-                live_backtest_instances = LiveTradeInstance.objects.filter(backtest_id=bt_id)
+                #live_backtest_instances = LiveTradeInstance.objects.filter(backtest_id=bt_id)
                 new_live_instance.strategy_id = bt.strategy_id
                 new_live_instance.save()
                 live_instance = live.Live(
