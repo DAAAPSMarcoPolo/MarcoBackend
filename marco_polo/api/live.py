@@ -140,8 +140,8 @@ class LiveAPI(generics.GenericAPIView):
                 initvalue += pos.open_price * pos.qty
                 finalvalue += pos.close_price * pos.qty
             for pos in open_positions:
-                initvalue += pos.open_price * pos.qty
                 curr_price = api.polygon.last_quote(symbol=pos.symbol).bidprice
+                initvalue += pos.open_price * pos.qty
                 finalvalue += curr_price * pos.qty
             if initvalue != 0:
                 pct_gain = (finalvalue - initvalue) / initvalue
