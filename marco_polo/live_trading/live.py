@@ -308,7 +308,7 @@ class Live:
 
         schedule.every().monday.at("15:00").do(self.startup)
         schedule.every().tuesday.at("15:00").do(self.startup)
-        schedule.every().wednesday.at("15:00").do(self.startup)
+        schedule.every().wednesday.at("15:07").do(self.startup)
         schedule.every().thursday.at("15:00").do(self.startup)
         schedule.every().friday.at("15:00").do(self.startup)
 
