@@ -2,7 +2,7 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework import status
 from marco_polo.models import LiveTradeInstance, LiveTradeInstancePosition
-from marco_polo.serializers import LiveTradeInstanceSerializer, LiveTradeInstancePositionerializer
+from marco_polo.serializers import LiveTradeInstanceSerializer, LiveTradeInstancePositionSerializer
 from knox.auth import TokenAuthentication
 
 class TradeLogsAPI(generics.GenericAPIView):
