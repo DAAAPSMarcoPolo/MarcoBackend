@@ -37,12 +37,10 @@ class LiveAPI(generics.GenericAPIView):
                 new_live_instance = LiveTradeInstance.objects.create(
                     backtest_id=backtest_id, live=False, starting_cash=funds, buying_power=funds)
                 live_instance_id = new_live_instance.id
-                bt_id = Backtest.objects.get(id=new_live_instance.backtest_id).id
+                bt = Backtest.objects.get(id=new_live_instance.backtest_id)
+                bt_id = bt.id
                 live_backtest_instances = LiveTradeInstance.objects.filter(backtest_id=bt_id)
-                p_l = 0.0
-                for instance in live_backtest_instances:
-                    p_l = p_l + instance.pct_change_closed
-                new_live_instance.pct_change_closed = p_l
+                new_live_instance.strategy_id = bt.strategy_id
                 new_live_instance.save()
                 live_instance = live.Live(
                     live_instance_id, strategy, universe, funds, keys)
@@ -131,7 +129,7 @@ class LiveAPI(generics.GenericAPIView):
 
             bt_id = Backtest.objects.get(id=live_instance.backtest_id).id
             positions = LiveTradeInstancePosition.objects.filter(
-                backtest_id=bt_id)
+                backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id)
             closed_positions = LiveTradeInstancePosition.objects.filter(
                 backtest_id=bt_id, open=False, live_trade_instance_id__lte=live_instance.id)
             open_positions = LiveTradeInstancePosition.objects.filter(
@@ -142,8 +140,8 @@ class LiveAPI(generics.GenericAPIView):
                 initvalue += pos.open_price * pos.qty
                 finalvalue += pos.close_price * pos.qty
             for pos in open_positions:
-                initvalue += pos.open_price * pos.qty
                 curr_price = api.polygon.last_quote(symbol=pos.symbol).bidprice
+                initvalue += pos.open_price * pos.qty
                 finalvalue += curr_price * pos.qty
             if initvalue != 0:
                 pct_gain = (finalvalue - initvalue) / initvalue
@@ -168,7 +166,7 @@ class LiveAPI(generics.GenericAPIView):
 
                 bt_id = Backtest.objects.get(id=live_instance.backtest_id).id
                 positions = LiveTradeInstancePosition.objects.filter(
-                    backtest_id=bt_id)
+                    backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id)
                 closed_positions = LiveTradeInstancePosition.objects.filter(
                     backtest_id=bt_id, open=False, live_trade_instance_id__lte=live_instance.id)
                 open_positions = LiveTradeInstancePosition.objects.filter(
@@ -193,7 +191,7 @@ class LiveAPI(generics.GenericAPIView):
                 live_instance_details = {
                     'live_instance': li,
                     'trades': positions,
-                    'pct_gain': pct_gain
+                    'pct_gain': pct_gain,
                 }
                 all_live_instances.append(live_instance_details)
             return Response(all_live_instances, status=status.HTTP_200_OK)
@@ -204,19 +202,50 @@ class StrategyLiveInstanceAPI(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
+        keys = AlpacaAPIKeys.objects.get(id=1)
+        api = trade_api.REST(
+            key_id=keys.key_id,
+            secret_key=keys.secret_key,
+            base_url='https://paper-api.alpaca.markets'
+        )
+        print('here')
         try:
             id = self.kwargs["id"]
-            alllives = []
-            strategy = Strategy.objects.get(id=id)
-            btset = strategy.backtest_set.all()
-            for bt in btset:
-                lives = bt.livetradeinstance_set.all().values()
-                for l in lives:
-                    alllives.append(l)
-            strategy = Strategy.objects.filter(id=id)
-            data = {'live_instances': alllives,
-                    'strategy_details': strategy.values()}
-            print(data)
-            return Response(data, status=status.HTTP_200_OK)
+            all_live_instances = []
+            live_instances = LiveTradeInstance.objects.filter(strategy_id=id)
+            print(live_instances)
+            for live_instance in live_instances:
+                bt = Backtest.objects.get(id=live_instance.backtest_id)
+                bt_id = bt.id
+                positions = LiveTradeInstancePosition.objects.filter(
+                    backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id)
+                closed_positions = LiveTradeInstancePosition.objects.filter(
+                    backtest_id=bt_id, open=False, live_trade_instance_id__lte=live_instance.id)
+                open_positions = LiveTradeInstancePosition.objects.filter(
+                    backtest_id=bt_id, open=True, live_trade_instance_id__lte=live_instance.id)
+                initvalue = 0
+                finalvalue = 0
+                for pos in closed_positions:
+                    initvalue += pos.open_price * pos.qty
+                    finalvalue += pos.close_price * pos.qty
+                for pos in open_positions:
+                    initvalue += pos.open_price * pos.qty
+                    curr_price = api.polygon.last_quote(symbol=pos.symbol).bidprice
+                    finalvalue += curr_price * pos.qty
+                if initvalue != 0:
+                    pct_gain = (finalvalue - initvalue) / initvalue
+                else:
+                    pct_gain = 0
+
+                li = LiveTradeInstanceSerializer(
+                    live_instance, context=self.get_serializer_context()).data
+                positions = positions.values()
+                live_instance_details = {
+                    'live_instance': li,
+                    'trades': positions,
+                    'pct_gain': pct_gain,
+                }
+                all_live_instances.append(live_instance_details)
+            return Response(all_live_instances, status=status.HTTP_200_OK)
         except:
             return Response("Could not get live instances for given strategy", status=status.HTTP_400_BAD_REQUEST)

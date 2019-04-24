@@ -107,11 +107,13 @@ class BacktestGraph(models.Model):
 class LiveTradeInstance(models.Model):
     id = models.AutoField(primary_key=True)
     backtest = models.ForeignKey(Backtest, on_delete=models.CASCADE)
+    strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
     pid = models.IntegerField(null=True)
     live = models.BooleanField(null=False, default=True)
     starting_cash = models.FloatField(null=True)
     buying_power = models.FloatField(null=True)
     pct_change_closed = models.FloatField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True)
 
 
 class LiveTradeInstancePosition(models.Model):
