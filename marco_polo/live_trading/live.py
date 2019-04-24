@@ -222,7 +222,8 @@ class Live:
         today = datetime.now().strftime('%Y-%m-%d')
         daily_data = self.daily_data[today]
         instance = LiveTradeInstance.objects.filter(id=self.id)[0]
-        open_positions = LiveTradeInstancePosition.objects.filter(live_trade_instance_id=self.id, open=True)
+        backtest = Backtest.objects.get(id=instance.backtest_id).id
+        open_positions = LiveTradeInstancePosition.objects.filter(backtest_id=backtest, open=True)
         for p in open_positions:
             p.symbol
 
@@ -255,17 +256,21 @@ class Live:
         open_positions = temp
 
         allocated_funds = LiveTradeInstance.objects.filter(id=self.id)[0].buying_power
-        try:
-            allocated_funds = allocated_funds / (self.strategy.portfolio_size - len(open_positions))
-        except:
-            allocated_funds = 0
 
 
         stock_to_buy_tuples = self.strategy.stocks_to_buy(curr_portfolio, daily_data)
-        print(allocated_funds)
         stocks = [x[0] for x in stock_to_buy_tuples]
         stocks = list(set(stocks) - set(open_positions))
         print(stocks)
+
+        try:
+            allocated_funds = allocated_funds / len(stocks)
+        except:
+            allocated_funds = 0
+
+        print('funds' + str(allocated_funds))
+
+
         for stock in stocks:
             self.buy(stock, allocated_funds)
 
@@ -290,10 +295,9 @@ class Live:
         return False
 
     def startup(self):
-        if self.trading_day():
-            self.import_strategy()
-            self.init_price_map()
-            self.daily_data_dict()
+        self.import_strategy()
+        self.init_price_map()
+        self.daily_data_dict()
 
     def trade(self):
         if self.trading_day():
@@ -306,17 +310,17 @@ class Live:
         live_instance.pid = os.getpid()
         live_instance.save()
 
-        schedule.every().monday.at("15:00").do(self.startup)
-        schedule.every().tuesday.at("15:00").do(self.startup)
-        schedule.every().wednesday.at("15:07").do(self.startup)
-        schedule.every().thursday.at("15:00").do(self.startup)
-        schedule.every().friday.at("15:00").do(self.startup)
+        schedule.every().monday.at("13:00").do(self.startup)
+        schedule.every().tuesday.at("13:00").do(self.startup)
+        schedule.every().wednesday.at("13:0").do(self.startup)
+        schedule.every().thursday.at("13:00").do(self.startup)
+        schedule.every().friday.at("13:00").do(self.startup)
 
-        schedule.every().monday.at("15:30").do(self.trade)
-        schedule.every().tuesday.at("15:30").do(self.trade)
-        schedule.every().wednesday.at("15:30").do(self.trade)
-        schedule.every().thursday.at("15:30").do(self.trade)
-        schedule.every().friday.at("15:30").do(self.trade)
+        schedule.every().monday.at("13:30").do(self.trade)
+        schedule.every().tuesday.at("13:30").do(self.trade)
+        schedule.every().wednesday.at("13:30").do(self.trade)
+        schedule.every().thursday.at("13:30").do(self.trade)
+        schedule.every().friday.at("13:30").do(self.trade)
 
         while True:
             schedule.run_pending()
