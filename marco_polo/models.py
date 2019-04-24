@@ -117,6 +117,8 @@ class LiveTradeInstancePosition(models.Model):
     id = models.AutoField(primary_key=True)
     live_trade_instance = models.ForeignKey(
         LiveTradeInstance, on_delete=models.CASCADE)
+    backtest = models.ForeignKey(
+        Backtest, on_delete=models.CASCADE)
     symbol = models.CharField(max_length=6)
     open = models.BooleanField(default=False)
     open_date = models.DateTimeField(null=False)
