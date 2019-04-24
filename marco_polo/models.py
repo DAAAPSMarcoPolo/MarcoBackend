@@ -113,6 +113,7 @@ class LiveTradeInstance(models.Model):
     starting_cash = models.FloatField(null=True)
     buying_power = models.FloatField(null=True)
     pct_change_closed = models.FloatField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True)
 
 
 class LiveTradeInstancePosition(models.Model):
