@@ -54,7 +54,7 @@ class StrategyAPI(generics.GenericAPIView):
                 return Response("Could not get the details for that algo", status=status.HTTP_400_BAD_REQUEST)
         # GET list of algos
         try:
-            all_strats = Strategy.objects.all()
+            all_strats = Strategy.objects.all().order_by('-live')
             data = []
             count = 0
             for strat in all_strats:
