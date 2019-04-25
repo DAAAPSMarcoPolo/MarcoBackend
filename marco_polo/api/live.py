@@ -14,8 +14,8 @@ from datetime import datetime
 
 
 class LiveAPI(generics.GenericAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
         try:
@@ -129,11 +129,11 @@ class LiveAPI(generics.GenericAPIView):
 
             bt_id = Backtest.objects.get(id=live_instance.backtest_id).id
             positions = LiveTradeInstancePosition.objects.filter(
-                backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id).order_by('-open_date')
+                backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id).order_by('-open_date', '-close_price')
             closed_positions = LiveTradeInstancePosition.objects.filter(
                 backtest_id=bt_id, open=False, live_trade_instance_id__lte=live_instance.id)
             open_positions = LiveTradeInstancePosition.objects.filter(
-                backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id).order_by('-open_date')
+                backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id)
             initvalue = 0
             finalvalue = 0
             for pos in closed_positions:
@@ -152,10 +152,10 @@ class LiveAPI(generics.GenericAPIView):
                 live_instance, context=self.get_serializer_context()).data
             positions = positions.values()
             for p in positions:
-                if p.close_date is not None:
-                    p['p_l'] = (p.close_price - p.open_price) / p.open_price
+                if p['close_price'] is not None:
+                    p['p_l'] = (p['close_price'] - p['open_price']) / p['open_price']
                 else:
-                    p['p_l'] = '--'
+                    p['p_l'] = None
             print(live_instance)
             live_instance_details = {
                 'live_instance': live_instance,
@@ -171,11 +171,12 @@ class LiveAPI(generics.GenericAPIView):
 
                 bt_id = Backtest.objects.get(id=live_instance.backtest_id).id
                 positions = LiveTradeInstancePosition.objects.filter(
-                    backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id)
+                    backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id).order_by('-open_date',
+                                                                                              '-close_price')
                 closed_positions = LiveTradeInstancePosition.objects.filter(
                     backtest_id=bt_id, open=False, live_trade_instance_id__lte=live_instance.id)
                 open_positions = LiveTradeInstancePosition.objects.filter(
-                    backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id).order_by('-open_date')
+                    backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id)
                 initvalue = 0
                 finalvalue = 0
                 for pos in closed_positions:
@@ -194,10 +195,10 @@ class LiveAPI(generics.GenericAPIView):
                     live_instance, context=self.get_serializer_context()).data
                 positions = positions.values()
                 for p in positions:
-                    if p.close_date is not None:
-                        p['p_l'] = (p.close_price - p.open_price) / p.open_price
+                    if p['close_price'] is not None:
+                        p['p_l'] = (p['close_price'] - p['open_price']) / p['open_price']
                     else:
-                        p['p_l'] = '--'
+                        p['p_l'] = None
                 live_instance_details = {
                     'live_instance': li,
                     'trades': positions,
@@ -223,12 +224,11 @@ class StrategyLiveInstanceAPI(generics.GenericAPIView):
             id = self.kwargs["id"]
             all_live_instances = []
             live_instances = LiveTradeInstance.objects.filter(strategy_id=id)
-            print(live_instances)
             for live_instance in live_instances:
                 bt = Backtest.objects.get(id=live_instance.backtest_id)
                 bt_id = bt.id
                 positions = LiveTradeInstancePosition.objects.filter(
-                    backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id)
+                    backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id).order_by('-open_date', '-close_price')
                 closed_positions = LiveTradeInstancePosition.objects.filter(
                     backtest_id=bt_id, open=False, live_trade_instance_id__lte=live_instance.id)
                 open_positions = LiveTradeInstancePosition.objects.filter(
@@ -251,10 +251,10 @@ class StrategyLiveInstanceAPI(generics.GenericAPIView):
                     live_instance, context=self.get_serializer_context()).data
                 positions = positions.values()
                 for p in positions:
-                    if p.close_date is not None:
-                        p['p_l'] = (p.close_price - p.open_price) / p.open_price
+                    if p['close_price'] is not None:
+                        p['p_l'] = (p['close_price'] - p['open_price']) / p['open_price']
                     else:
-                        p['p_l'] = '--'
+                        p['p_l'] = None
                 live_instance_details = {
                     'live_instance': li,
                     'trades': positions,
