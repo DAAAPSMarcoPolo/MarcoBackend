@@ -315,7 +315,7 @@ class Live:
 
         schedule.every().monday.at("13:00").do(self.startup)
         schedule.every().tuesday.at("13:00").do(self.startup)
-        schedule.every().wednesday.at("13:0").do(self.startup)
+        schedule.every().wednesday.at("13:00").do(self.startup)
         schedule.every().thursday.at("13:00").do(self.startup)
         schedule.every().friday.at("13:00").do(self.startup)
 

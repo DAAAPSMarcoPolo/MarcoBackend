@@ -129,11 +129,11 @@ class LiveAPI(generics.GenericAPIView):
 
             bt_id = Backtest.objects.get(id=live_instance.backtest_id).id
             positions = LiveTradeInstancePosition.objects.filter(
-                backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id)
+                backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id).order_by('-open_date')
             closed_positions = LiveTradeInstancePosition.objects.filter(
                 backtest_id=bt_id, open=False, live_trade_instance_id__lte=live_instance.id)
             open_positions = LiveTradeInstancePosition.objects.filter(
-                backtest_id=bt_id, open=True, live_trade_instance_id__lte = live_instance.id)
+                backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id).order_by('-open_date')
             initvalue = 0
             finalvalue = 0
             for pos in closed_positions:
@@ -151,6 +151,11 @@ class LiveAPI(generics.GenericAPIView):
             live_instance = LiveTradeInstanceSerializer(
                 live_instance, context=self.get_serializer_context()).data
             positions = positions.values()
+            for p in positions:
+                if p.close_date is not None:
+                    p['p_l'] = (p.close_price - p.open_price) / p.open_price
+                else:
+                    p['p_l'] = '--'
             print(live_instance)
             live_instance_details = {
                 'live_instance': live_instance,
@@ -170,7 +175,7 @@ class LiveAPI(generics.GenericAPIView):
                 closed_positions = LiveTradeInstancePosition.objects.filter(
                     backtest_id=bt_id, open=False, live_trade_instance_id__lte=live_instance.id)
                 open_positions = LiveTradeInstancePosition.objects.filter(
-                    backtest_id=bt_id, open=True, live_trade_instance_id__lte=live_instance.id)
+                    backtest_id=bt_id, live_trade_instance_id__lte=live_instance.id).order_by('-open_date')
                 initvalue = 0
                 finalvalue = 0
                 for pos in closed_positions:
@@ -188,6 +193,11 @@ class LiveAPI(generics.GenericAPIView):
                 li = LiveTradeInstanceSerializer(
                     live_instance, context=self.get_serializer_context()).data
                 positions = positions.values()
+                for p in positions:
+                    if p.close_date is not None:
+                        p['p_l'] = (p.close_price - p.open_price) / p.open_price
+                    else:
+                        p['p_l'] = '--'
                 live_instance_details = {
                     'live_instance': li,
                     'trades': positions,
@@ -240,6 +250,11 @@ class StrategyLiveInstanceAPI(generics.GenericAPIView):
                 li = LiveTradeInstanceSerializer(
                     live_instance, context=self.get_serializer_context()).data
                 positions = positions.values()
+                for p in positions:
+                    if p.close_date is not None:
+                        p['p_l'] = (p.close_price - p.open_price) / p.open_price
+                    else:
+                        p['p_l'] = '--'
                 live_instance_details = {
                     'live_instance': li,
                     'trades': positions,
