@@ -58,8 +58,9 @@ class StrategyAPI(generics.GenericAPIView):
             data = []
             count = 0
             for strat in all_strats:
-                algo_dets = all_strats.values()[count]
                 set = strat.backtest_set.all().order_by('-sharpe').values()
+                algo_dets  = StrategySerializer(
+                    strat, context=self.get_serializer_context()).data
                 best_backtest = False
                 best_votes = None
                 if set.count() > 0:
